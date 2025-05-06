@@ -1,6 +1,5 @@
 Vagrant.configure("2") do |config|
-  # Prevent Vagrant from replacing the default insecure key --> preventing connection error
-  config.ssh.insert_key = false
+  
 
   # Base box for all machines
   BOX_NAME = "fedora/41-cloud-base"
