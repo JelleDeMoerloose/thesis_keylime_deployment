@@ -1,0 +1,56 @@
+- name: Install SW TPM
+  yum:
+    name:
+      - swtpm
+      - swtpm-tools
+    state: present
+
+- name: Set TPM2TOOLS_TCTI environment variable globally
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    regexp: '^TPM2TOOLS_TCTI'
+    line: 'TPM2TOOLS_TCTI=device:/dev/tpm0'
+
+- name: Enable the vTPM proxy kernel module
+  modprobe:
+    name: tpm_vtpm_proxy
+    state: present
+    persistent: present
+
+- name: Install TPM Emulator service
+  copy:
+    src: tpm_emulator.service
+    dest: /etc/systemd/system/tpm_emulator.service
+    mode: "0644"
+
+- name: Enable and restart TPM Emulator service
+  systemd:
+    name: tpm_emulator.service
+    enabled: yes
+    daemon_reload: yes
+    masked: no
+    state: restarted
+
+- name: IMA config directory
+  file: path=/etc/ima state=directory
+
+- name: IMA policy
+  copy:
+    src: ima-policy
+    dest: /etc/ima/ima-policy
+    mode: 0644
+
+- name: Install IMA Emulator service
+  copy:
+    src: ima_emulator.service
+    dest: /etc/systemd/system/ima_emulator.service
+    mode: "0644"
+
+- name: Enable and restart IMA Emulator service
+  systemd:
+    name: ima_emulator.service
+    enabled: yes
+    daemon_reload: yes
+    masked: no
+    state: restarted

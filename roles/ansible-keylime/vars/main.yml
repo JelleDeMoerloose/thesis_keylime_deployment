@@ -1,0 +1,40 @@
+---
+# requirements
+dependencies:
+  ['autoconf',
+   'autoconf-archive',
+   'automake',
+   'clang-devel',
+   'dbus-devel',
+   'gcc',
+   'git',
+   'glib2-devel',
+   'keylime',
+   'libcurl-devel',
+   'libgcrypt-devel',
+   'libstdc++-devel',
+   'libtool',
+   'libffi-devel',
+   'pkg-config',
+   'python3-cryptography',
+   'python3-devel',
+   'python3-pyyaml',
+   'python3-yaml',
+   'python3-simplejson',
+   'python3-sqlalchemy',
+   'python3-alembic',
+   'redhat-rpm-config',
+   'tpm2-tools',
+   'tpm2-tss',
+   'tpm2-tss-devel',
+   'uriparser-devel',
+   'efivar-devel',
+   'cargo',
+   'openssl-devel',
+   'zeromq-devel',
+   'libarchive-devel']
+
+# section for vars
+shell_profiles:
+  - .bash_profile
+
