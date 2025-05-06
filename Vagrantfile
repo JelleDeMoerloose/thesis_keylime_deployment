@@ -10,12 +10,12 @@ Vagrant.configure("2") do |config|
     agent.vm.hostname = "agent"
     agent.vm.network :private_network, ip: "192.168.33.10"
     agent.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus   = 2
+      vb.memory = 1024
+      vb.cpus   = 1
     end
     agent.vm.provider :libvirt do |lv|
       lv.memory = 2048
-      lv.cpus   = 2
+      lv.cpus   = 1
     end
   end
 
@@ -25,12 +25,12 @@ Vagrant.configure("2") do |config|
     reg.vm.hostname = "registrar"
     reg.vm.network :private_network, ip: "192.168.33.11"
     reg.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus   = 2
+      vb.memory = 1024
+      vb.cpus   = 1
     end
     reg.vm.provider :libvirt do |lv|
-      lv.memory = 2048
-      lv.cpus   = 2
+      lv.memory = 1024
+      lv.cpus   = 1
     end
   end
 
@@ -40,12 +40,12 @@ Vagrant.configure("2") do |config|
     ver.vm.hostname = "verifier"
     ver.vm.network :private_network, ip: "192.168.33.12"
     ver.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus   = 2
+      vb.memory = 1024
+      vb.cpus   = 1
     end
     ver.vm.provider :libvirt do |lv|
-      lv.memory = 2048
-      lv.cpus   = 2
+      lv.memory = 1024
+      lv.cpus   = 1
     end
   end
 
@@ -55,12 +55,12 @@ Vagrant.configure("2") do |config|
     ten.vm.hostname = "tenant"
     ten.vm.network :private_network, ip: "192.168.33.13"
     ten.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus   = 2
+      vb.memory = 1024
+      vb.cpus   = 1
     end
     ten.vm.provider :libvirt do |lv|
-      lv.memory = 2048
-      lv.cpus   = 2
+      lv.memory = 1024
+      lv.cpus   = 1
     end
   end
 
