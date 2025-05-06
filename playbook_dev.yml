@@ -1,0 +1,19 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+    - name: Ensure Python 3 is available
+      dnf:
+        name: python3
+        state: present
+    - name: Install libselinux-python3
+      dnf:
+        name: libselinux-python3
+        state: present    
+    - name: Put SELinux in permissive mode, logging actions that would be blocked.
+      selinux:
+        policy: targeted
+        state: permissive
+  roles:
+    - ansible-keylime
+    - tpm_setup
