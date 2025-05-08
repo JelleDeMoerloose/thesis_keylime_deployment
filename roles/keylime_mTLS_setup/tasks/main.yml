@@ -1,0 +1,24 @@
+- name: Ensure Keylime CA directory exists
+  ansible.builtin.file:
+    path: "{{ keylime_cert_dest }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy CA cert
+  ansible.builtin.copy:
+    src: "{{ keylime_rootca_cert }}"
+    dest: "{{ keylime_cert_dest }}"
+    owner: keylime
+    group: tss
+    mode: '0644'
+
+- name: Copy additional certs
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ keylime_cert_dest }}"
+    owner: keylime
+    group: tss
+    mode: '0644'
+  with_fileglob:
+    - "{{ keylime_cert_patterns }}"
+  when: keylime_cert_patterns is defined and keylime_cert_patterns | length > 0

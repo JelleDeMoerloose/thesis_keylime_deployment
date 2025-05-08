@@ -18,6 +18,10 @@
   roles:
     - ansible-keylime
     - tpm_setup
+    - role: keylime_cert_setup
+      vars:
+        keylime_rootca_cert: /CA/cacert.crt
+        keylime_cert_dest: /var/lib/keylime/cv_ca
   tasks:
     - name: Set Keylime agent environment variables for root user
       blockinfile:
@@ -42,19 +46,6 @@
         group: tss
         recurse: yes
 
-    - name: Ensure Keylime CA directory exists
-      ansible.builtin.file:
-        path: /var/lib/keylime/cv_ca
-        state: directory
-        mode: '0755'
-
-    - name: Copy entire RootCA to component
-      ansible.builtin.copy:
-        src: CA/cacert.crt
-        dest: /var/lib/keylime/cv_ca/
-        recurse: yes
-        
-
 - name: Configure Verifier
   hosts: keylime_verifier
   become: true
@@ -68,6 +59,13 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
+    - role: keylime_cert_setup
+      vars:
+        keylime_rootca_cert: /CA/cacert.crt
+        keylime_cert_dest: /var/lib/keylime/cv_ca
+        keylime_cert_patterns: 
+          - "CA/server*"
+          - "CA/client*"
   tasks:
     - name: Set Keylime verifier environment variables for root user
       blockinfile:
@@ -86,32 +84,6 @@
           export KEYLIME_VERIFIER_CLIENT_CERT="client-cert.crt"
           export KEYLIME_VERIFIER_TRUSTED_SERVER_CA="['cacert.crt']"
 
-    - name: Ensure Keylime CA directory exists
-      ansible.builtin.file:
-        path: /var/lib/keylime/cv_ca
-        state: directory
-        mode: '0755'
-    - name: Copy entire RootCA to component
-      ansible.builtin.copy:
-        src: CA/cacert.crt
-        dest: /var/lib/keylime/cv_ca/
-        recurse: yes
-    - name: Copy all files starting with 'server' from CA/ to component
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/keylime/cv_ca/
-      with_fileglob:
-        - "CA/server*"
-    - name: Copy all files starting with 'client' from CA/ to component
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/keylime/cv_ca/
-      with_fileglob:
-        - "CA/client*"
-
-      
-  
-
 - name: Configure Registrar
   hosts: keylime_registrar
   become: true
@@ -125,6 +97,12 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
+    - role: keylime_cert_setup
+      vars:
+        keylime_rootca_cert: /CA/cacert.crt
+        keylime_cert_dest: /var/lib/keylime/cv_ca
+        keylime_cert_patterns: 
+          - "CA/server*"
   tasks:
     - name: Set Keylime registrar environment variables for root user
       blockinfile:
@@ -138,23 +116,6 @@
           export KEYLIME_REGISTRAR_SERVER_KEY="server-private.pem"
           export KEYLIME_REGISTRAR_SERVER_CERT="server-cert.crt"
           export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="cacert.pem"
-    - name: Ensure Keylime CA directory exists
-      ansible.builtin.file:
-        path: /var/lib/keylime/cv_ca
-        state: directory
-        mode: '0755'
-    - name: Copy entire RootCA to component
-      ansible.builtin.copy:
-        src: CA/cacert.crt
-        dest: /var/lib/keylime/cv_ca/
-        recurse: yes
-    - name: Copy all files starting with 'server' from CA/ to component
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/keylime/cv_ca/
-      with_fileglob:
-        - "CA/server*"
-
 
 - name: Configure Tenant
   hosts: keylime_tenant
@@ -169,6 +130,12 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
+    - role: keylime_cert_setup
+      vars:
+        keylime_rootca_cert: /CA/cacert.crt
+        keylime_cert_dest: /var/lib/keylime/cv_ca
+        keylime_cert_patterns: 
+          - "CA/client*"
   tasks:
     - name: Set Keylime tenant environment variables for root user
       blockinfile:
@@ -183,22 +150,5 @@
           export KEYLIME_TENANT_TRUSTED_SERVER_CA="['cacert.crt']"
           export KEYLIME_TENANT_CLIENT_KEY="client-private.pem"
           export KEYLIME_TENANT_CLIENT_CERT="client-cert.crt"
-    - name: Ensure Keylime CA directory exists
-      ansible.builtin.file:
-        path: /var/lib/keylime/cv_ca
-        state: directory
-        mode: '0755'
-
-    - name: Copy entire RootCA to component
-      ansible.builtin.copy:
-        src: CA/cacert.crt
-        dest: /var/lib/keylime/cv_ca/
-        recurse: yes
-    - name: Copy all files starting with 'client' from CA/ to component
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/keylime/cv_ca/
-      with_fileglob:
-        - "CA/client*"
     
 
