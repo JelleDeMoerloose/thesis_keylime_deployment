@@ -1,0 +1,9 @@
+- name: Copy certificates matching pattern {{ cert_pattern }}
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ keylime_cert_dest }}"
+    owner: keylime
+    group: tss
+    mode: '0644'
+  with_fileglob:
+    - "{{ cert_pattern }}"
