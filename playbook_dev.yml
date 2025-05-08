@@ -2,6 +2,8 @@
 - name: Configure Keylime Agent
   hosts: keylime_agent
   become: true
+  vars:
+    swtpm_enabled: true  # Set to false to disable swtpm-related tasks
   pre_tasks:
     - name: Ensure Python 3 is available
       dnf:
@@ -20,7 +22,7 @@
     - tpm_setup
     - role: keylime_cert_setup
       vars:
-        keylime_rootca_cert: /CA/cacert.crt
+        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
   tasks:
     - name: Set Keylime agent environment variables for root user
@@ -45,6 +47,12 @@
         owner: keylime
         group: tss
         recurse: yes
+    - name: Fetch issuer cert from agent (if swtpm_enabled is true)
+      fetch:
+        src: /var/lib/swtpm-localca/issuercert.pem  # Path where cert is stored on the agent
+        dest: "{{ playbook_dir }}/CA/issuer_cert.pem" # Temporary location on the control machine
+        flat: yes
+      when: swtpm_enabled
 
 - name: Configure Verifier
   hosts: keylime_verifier
@@ -61,11 +69,11 @@
     - ansible-keylime
     - role: keylime_cert_setup
       vars:
-        keylime_rootca_cert: /CA/cacert.crt
+        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "CA/server*"
-          - "CA/client*"
+          - "{{ playbook_dir }}/CA/server*"
+          - "{{ playbook_dir }}/CA/client*"
   tasks:
     - name: Set Keylime verifier environment variables for root user
       blockinfile:
@@ -99,10 +107,10 @@
     - ansible-keylime
     - role: keylime_cert_setup
       vars:
-        keylime_rootca_cert: /CA/cacert.crt
+        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "CA/server*"
+          - "{{ playbook_dir }}/CA/server*"
   tasks:
     - name: Set Keylime registrar environment variables for root user
       blockinfile:
@@ -132,10 +140,10 @@
     - ansible-keylime
     - role: keylime_cert_setup
       vars:
-        keylime_rootca_cert: /CA/cacert.crt
+        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "CA/client*"
+          - "{{ playbook_dir }}/CA/client*"
   tasks:
     - name: Set Keylime tenant environment variables for root user
       blockinfile:
@@ -149,6 +157,26 @@
           export KEYLIME_TENANT_TPM_CERT_STORE="/var/lib/keylime/tpm_cert_store"
           export KEYLIME_TENANT_TRUSTED_SERVER_CA="['cacert.crt']"
           export KEYLIME_TENANT_CLIENT_KEY="client-private.pem"
-          export KEYLIME_TENANT_CLIENT_CERT="client-cert.crt"
-    
+          export KEYLIME_TENANT_CLIENT_CERT="client-cert.crt"    
+
+- name: Inject swtpm issuer certificate into tenant
+  hosts: keylime_tenant  # Or split into separate groups for agent and tenant if needed
+  become: true
+  vars:
+    swtpm_enabled: true  # Set to false to disable swtpm-related tasks
+  tasks:
+    # Step 2: Tenant — Copy cert to the tenant's TPM store (only if swtpm_enabled is true)
+    - name: Ensure TPM cert store exists on tenant
+      file:
+        path: /var/lib/keylime/tpm_cert_store
+        state: directory
+        mode: '0755'
+      when: swtpm_enabled
+
+    - name: Copy the issuer cert from control to tenant (if swtpm_enabled is true)
+      copy:
+        src: "{{ playbook_dir }}/CA/issuer_cert.pem"  # Path from the control machine (after fetching)
+        dest: /var/lib/keylime/tpm_cert_store/issuer_cert.pem
+        mode: '0644'
+      when: swtpm_enabled
 
