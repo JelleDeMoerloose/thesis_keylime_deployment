@@ -18,6 +18,29 @@
   roles:
     - ansible-keylime
     - tpm_setup
+  tasks:
+    - name: Set Keylime agent environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME AGENT ENV VARS"
+        block: |
+          export KEYLIME_AGENT_IP="192.168.33.10"
+          export KEYLIME_AGENT_PORT="9002"
+          export KEYLIME_AGENT_CONTACT_IP="192.168.33.10"
+          export KEYLIME_AGENT_CONTACT_PORT="9002"
+          export KEYLIME_AGENT_REGISTRAR_IP="192.168.33.11"
+          export KEYLIME_AGENT_REGISTRAR_PORT="8890"
+          export KEYLIME_AGENT_ENABLE_AGENT_MTLS="true"
+          export KEYLIME_AGENT_SERVER_KEY="server-private.pem"
+          export KEYLIME_AGENT_SERVER_CERT="server-cert.crt"
+          export KEYLIME_AGENT_TRUSTED_CLIENT_CA="cv_ca/cacert.crt"
+    
+    - name: Set ownership of /var/lib/keylime to keylime:tss
+      file:
+        path: /var/lib/keylime
+        owner: keylime
+        group: tss
+        recurse: yes
 
 - name: Configure Keylime Registrars, Verifiers, and Tenants
   hosts: keylime_registrar,keylime_verifier,keylime_tenant
