@@ -20,7 +20,7 @@
   roles:
     - ansible-keylime
     - tpm_setup
-    - role: keylime_cert_setup
+    - role: keylime_mTLS_setup
       vars:
         keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
@@ -67,7 +67,7 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
-    - role: keylime_cert_setup
+    - role: keylime_mTLS_setup
       vars:
         keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
@@ -91,6 +91,8 @@
           export KEYLIME_VERIFIER_CLIENT_KEY="client-private.pem"
           export KEYLIME_VERIFIER_CLIENT_CERT="client-cert.crt"
           export KEYLIME_VERIFIER_TRUSTED_SERVER_CA="['cacert.crt']"
+          export KEYLIME_VERIFIER_QUOTE_INTERVAL="5"
+          export TCTI="device:/dev/tpmrm0"
 
 - name: Configure Registrar
   hosts: keylime_registrar
@@ -105,7 +107,7 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
-    - role: keylime_cert_setup
+    - role: keylime_mTLS_setup
       vars:
         keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
@@ -123,7 +125,7 @@
           export KEYLIME_REGISTRAR_TLS_DIR="/var/lib/keylime/cv_ca"
           export KEYLIME_REGISTRAR_SERVER_KEY="server-private.pem"
           export KEYLIME_REGISTRAR_SERVER_CERT="server-cert.crt"
-          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="cacert.pem"
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="['cacert.crt']"
 
 - name: Configure Tenant
   hosts: keylime_tenant
@@ -138,7 +140,7 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
-    - role: keylime_cert_setup
+    - role: keylime_mTLS_setup
       vars:
         keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
