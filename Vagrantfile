@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
     end
     agent.vm.provision "shell", inline: <<-SHELL
       nmcli connection add type ethernet ifname enp0s8 con-name priv0 ip4 192.168.33.10/24
-      nmcli connection up priv0
+      nmcli connection up priv0 connection.autoconnect yes
     SHELL
   end
 
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     end
     reg.vm.provision "shell", inline: <<-SHELL
       nmcli connection add type ethernet ifname enp0s8 con-name priv0 ip4 192.168.33.11/24
-      nmcli connection up priv0
+      nmcli connection up priv0 connection.autoconnect yes
     SHELL
   end
 
@@ -42,7 +42,7 @@ Vagrant.configure("2") do |config|
     end
     ver.vm.provision "shell", inline: <<-SHELL
       nmcli connection add type ethernet ifname enp0s8 con-name priv0 ip4 192.168.33.12/24
-      nmcli connection up priv0
+      nmcli connection up priv0 connection.autoconnect yes
     SHELL
   end
 
@@ -57,7 +57,7 @@ Vagrant.configure("2") do |config|
     end
     ten.vm.provision "shell", inline: <<-SHELL
       nmcli connection add type ethernet ifname enp0s8 con-name priv0 ip4 192.168.33.13/24
-      nmcli connection up priv0
+      nmcli connection up priv0 connection.autoconnect yes
       #copy ssh keys from vagrant --> way easier to run ansible scripts --> cant run ansible on windows
       cp /vagrant/.vagrant/machines/keylime_agent/virtualbox/private_key ~/.ssh/keylime/keylime_agent_key
       chmod 600 ~/.ssh/keylime/keylime_agent_key
