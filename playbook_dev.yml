@@ -42,8 +42,8 @@
         group: tss
         recurse: yes
 
-- name: Configure Keylime Registrars, Verifiers, and Tenants
-  hosts: keylime_registrar,keylime_verifier,keylime_tenant
+- name: Configure Verifier
+  hosts: keylime_verifier
   become: true
   pre_tasks:
     - name: Probe python installation
@@ -55,3 +55,78 @@
       when: "'python' not in python_available.stdout"
   roles:
     - ansible-keylime
+  tasks:
+    - name: Set Keylime verifier environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME VERIFIER ENV VARS"
+        block: |
+          export KEYLIME_VERIFIER_IP="192.168.33.12"
+          export KEYLIME_VERIFIER_PORT="8881"
+          export KEYLIME_VERIFIER_REGISTRAR_IP="192.168.33.11"
+          export KEYLIME_VERIFIER_REGISTRAR_PORT="8891"
+          export KEYLIME_VERIFIER_TLS_DIR="/var/lib/keylime/cv_ca"
+          export KEYLIME_VERIFIER_SERVER_KEY="server-private.pem"
+          export KEYLIME_VERIFIER_SERVER_CERT="server-cert.crt"
+          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA="['cacert.crt']"
+          export KEYLIME_VERIFIER_CLIENT_KEY="client-private.pem"
+          export KEYLIME_VERIFIER_CLIENT_CERT="client-cert.crt"
+          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA="['cacert.crt']"  
+  
+
+- name: Configure Registrar
+  hosts: keylime_registrar
+  become: true
+  pre_tasks:
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
+    - name: Bootstrap a host without python installed
+      raw: dnf install python3 python3-libselinux
+      when: "'python' not in python_available.stdout"
+  roles:
+    - ansible-keylime
+  tasks:
+    - name: Set Keylime registrar environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME REGISTRAR ENV VARS"
+        block: |
+          export KEYLIME_REGISTRAR_IP="192.168.33.11"
+          export KEYLIME_REGISTRAR_PORT="8890"
+          export KEYLIME_REGISTRAR_TLS_PORT="8891"
+          export KEYLIME_REGISTRAR_TLS_DIR="/var/lib/keylime/cv_ca"
+          export KEYLIME_REGISTRAR_SERVER_KEY="server-private.pem"
+          export KEYLIME_REGISTRAR_SERVER_CERT="server-cert.crt"
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="cacert.pem"
+
+
+- name: Configure Tenant
+  hosts: keylime_tenant
+  become: true
+  pre_tasks:
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
+    - name: Bootstrap a host without python installed
+      raw: dnf install python3 python3-libselinux
+      when: "'python' not in python_available.stdout"
+  roles:
+    - ansible-keylime
+  tasks:
+    - name: Set Keylime tenant environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME TENANT ENV VARS"
+        block: |
+          export KEYLIME_TENANT_VERIFIER_IP="192.168.33.12"
+          export KEYLIME_TENANT_VERIFIER_PORT="8881"
+          export KEYLIME_TENANT_REGISTRAR_IP="192.168.33.11"
+          export KEYLIME_TENANT_REGISTRAR_PORT="8891"
+          export KEYLIME_TENANT_TPM_CERT_STORE="/var/lib/keylime/tpm_cert_store"
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA="['cacert.crt']"
+          export KEYLIME_TENANT_CLIENT_KEY="client-private.pem"
+          export KEYLIME_TENANT_CLIENT_CERT="client-cert.crt"
+
