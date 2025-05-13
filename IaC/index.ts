@@ -12,8 +12,9 @@ const vmSize = config.get("vmSize") || "Standard_A1_v2";
 const osImage = config.get("osImage") || "Debian:debian-11:11:latest";
 const adminUsername = config.get("adminUsername") || "pulumiuser";
 const servicePort = config.get("servicePort") || "80";
+const existingRgName = config.get("RgName") || "";
 
-const [ osImagePublisher, osImageOffer, osImageSku, osImageVersion ] = osImage.split(":");
+const [osImagePublisher, osImageOffer, osImageSku, osImageVersion] = osImage.split(":");
 
 // Create an SSH key
 const sshKey = new tls.PrivateKey("ssh-key", {
@@ -21,12 +22,18 @@ const sshKey = new tls.PrivateKey("ssh-key", {
     rsaBits: 4096,
 });
 
+
+
 // Create a resource group
-const resourceGroup = new resources.ResourceGroup("resource-group");
+//const resourceGroup = new resources.ResourceGroup("resource-group");
+// Lookup the existing resource group --> later ifstatement
+/*const resourceGroup = resources.getResourceGroupOutput({
+    resourceGroupName: existingRgName,
+});*/
 
 // Create a virtual network
 const virtualNetwork = new network.VirtualNetwork("network", {
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     addressSpace: {
         addressPrefixes: ["10.0.0.0/16"],
     },
@@ -47,7 +54,7 @@ var domainNameLabel = new random.RandomString("domain-label", {
 
 // Create a public IP address for the VM
 const publicIp = new network.PublicIPAddress("public-ip", {
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     publicIPAllocationMethod: network.IPAllocationMethod.Dynamic,
     dnsSettings: {
         domainNameLabel: domainNameLabel,
@@ -56,7 +63,7 @@ const publicIp = new network.PublicIPAddress("public-ip", {
 
 // Create a security group allowing inbound access over ports 80 (for HTTP) and 22 (for SSH)
 const securityGroup = new network.NetworkSecurityGroup("security-group", {
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     securityRules: [
         {
             name: `${vmName}-securityrule`,
@@ -77,7 +84,7 @@ const securityGroup = new network.NetworkSecurityGroup("security-group", {
 
 // Create a network interface with the virtual network, IP address, and security group
 const networkInterface = new network.NetworkInterface("network-interface", {
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     networkSecurityGroup: {
         id: securityGroup.id,
     },
@@ -110,7 +117,7 @@ const initScript = `#!/bin/bash
 
 // Create the virtual machine
 const vm = new compute.VirtualMachine("vm", {
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     networkProfile: {
         networkInterfaces: [
             {
@@ -154,7 +161,7 @@ const vm = new compute.VirtualMachine("vm", {
 
 // Once the machine is created, fetch its IP address and DNS hostname
 const vmAddress = vm.id.apply(_ => network.getPublicIPAddressOutput({
-    resourceGroupName: resourceGroup.name,
+    resourceGroupName: existingRgName,
     publicIpAddressName: publicIp.name,
 }));
 
