@@ -4,6 +4,6 @@ config:
   keylimeVMsetup:adminUsername: pulumiuser
   keylimeVMsetup:osImage: RedHat:RHEL:9-lvm-gen2:9.0.2022053014
   keylimeVMsetup:servicePort: "80"
-  keylimeVMsetup:vmName: testVM
+  keylimeVMsetup:vmName: testvm
   keylimeVMsetup:vmSize: Standard_B1s
-  keylimeVMsetup: RgName
+  keylimeVMsetup:RgName: Jelle-Thesis-Resources
