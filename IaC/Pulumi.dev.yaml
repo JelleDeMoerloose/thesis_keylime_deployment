@@ -2,7 +2,7 @@ encryptionsalt: v1:xgpqRNfcUXo=:v1:9ojl5aRQca3XiDVd:KWNnvcwIjq74hNmgF9x5JH7UqteH
 config:
   azure-native:location: WestUS2
   keylimeVMsetup:adminUsername: pulumiuser
-  keylimeVMsetup:osImage: solvedevops1643693563360:fedora-linux-38:plan001:2023.06.07
+  keylimeVMsetup:osImage: RedHat:RHEL:9-lvm-gen2:9.0.2022053014
   keylimeVMsetup:servicePort: "80"
   keylimeVMsetup:vmName: testVM
   keylimeVMsetup:vmSize: Standard_B1s
