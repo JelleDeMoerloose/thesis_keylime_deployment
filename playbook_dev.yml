@@ -25,21 +25,24 @@
         keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
         keylime_cert_dest: /var/lib/keylime/cv_ca
   tasks:
+    - name: Generate Keylime Agent env block string
+      set_fact:
+        keylime_agent_env_block: |
+          export KEYLIME_AGENT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_PORT="{{ keylime_agent_port }}"
+          export KEYLIME_AGENT_CONTACT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_CONTACT_PORT="{{ keylime_agent_contact_port }}"
+          export KEYLIME_AGENT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
+          export KEYLIME_AGENT_REGISTRAR_PORT="{{ keylime_agent_registrar_port }}"
+          export KEYLIME_AGENT_ENABLE_AGENT_MTLS="{{ keylime_agent_enable_agent_mtls }}"
+          export KEYLIME_AGENT_TRUSTED_CLIENT_CA="{{ keylime_agent_trusted_client_ca }}"
+
     - name: Set Keylime agent environment variables for root user
       blockinfile:
         path: /root/.bashrc
         marker: "# {mark} KEYLIME AGENT ENV VARS"
-        block: |
-          export KEYLIME_AGENT_IP="192.168.33.10"
-          export KEYLIME_AGENT_PORT="9002"
-          export KEYLIME_AGENT_CONTACT_IP="192.168.33.10"
-          export KEYLIME_AGENT_CONTACT_PORT="9002"
-          export KEYLIME_AGENT_REGISTRAR_IP="192.168.33.11"
-          export KEYLIME_AGENT_REGISTRAR_PORT="8890"
-          export KEYLIME_AGENT_ENABLE_AGENT_MTLS="true"
-          export KEYLIME_AGENT_SERVER_KEY="server-private.pem"
-          export KEYLIME_AGENT_SERVER_CERT="server-cert.crt"
-          export KEYLIME_AGENT_TRUSTED_CLIENT_CA="cv_ca/cacert.crt"
+        block: "{{ keylime_agent_env_block }}"
+
     
     - name: Set ownership of /var/lib/keylime to keylime:tss
       file:
@@ -75,24 +78,27 @@
           - "{{ playbook_dir }}/CA/server*"
           - "{{ playbook_dir }}/CA/client*"
   tasks:
+    
+    - name: Generate Keylime Verifier env block string
+      set_fact:
+        keylime_verifier_env_block: |
+          export KEYLIME_VERIFIER_IP="{{ ansible_host }}"
+          export KEYLIME_VERIFIER_PORT="{{ keylime_verifier_port }}"
+          export KEYLIME_VERIFIER_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
+          export KEYLIME_VERIFIER_REGISTRAR_PORT="{{ keylime_verifier_registrar_port }}"
+          export KEYLIME_VERIFIER_TLS_DIR="{{ keylime_verifier_tls_dir }}"
+          export KEYLIME_VERIFIER_SERVER_KEY="{{ keylime_verifier_server_key }}"
+          export KEYLIME_VERIFIER_SERVER_CERT="{{ keylime_verifier_server_cert }}"
+          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA={{ keylime_verifier_trusted_client_ca | to_json }}
+          export KEYLIME_VERIFIER_CLIENT_KEY="{{ keylime_verifier_client_key }}"
+          export KEYLIME_VERIFIER_CLIENT_CERT="{{ keylime_verifier_client_cert }}"
+          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca | to_json }}
+          export KEYLIME_VERIFIER_QUOTE_INTERVAL="{{ keylime_verifier_quote_interval }}"
     - name: Set Keylime verifier environment variables for root user
       blockinfile:
         path: /root/.bashrc
         marker: "# {mark} KEYLIME VERIFIER ENV VARS"
-        block: |
-          export KEYLIME_VERIFIER_IP="192.168.33.12"
-          export KEYLIME_VERIFIER_PORT="8881"
-          export KEYLIME_VERIFIER_REGISTRAR_IP="192.168.33.11"
-          export KEYLIME_VERIFIER_REGISTRAR_PORT="8891"
-          export KEYLIME_VERIFIER_TLS_DIR="/var/lib/keylime/cv_ca"
-          export KEYLIME_VERIFIER_SERVER_KEY="server-private.pem"
-          export KEYLIME_VERIFIER_SERVER_CERT="server-cert.crt"
-          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA="['cacert.crt']"
-          export KEYLIME_VERIFIER_CLIENT_KEY="client-private.pem"
-          export KEYLIME_VERIFIER_CLIENT_CERT="client-cert.crt"
-          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA="['cacert.crt']"
-          export KEYLIME_VERIFIER_QUOTE_INTERVAL="5"
-          export TCTI="device:/dev/tpmrm0"
+        block: "{{ keylime_verifier_env_block }}"
 
 - name: Configure Registrar
   hosts: keylime_registrar
@@ -114,18 +120,23 @@
         keylime_cert_patterns: 
           - "{{ playbook_dir }}/CA/server*"
   tasks:
-    - name: Set Keylime registrar environment variables for root user
+    - name: Generate Keylime Registrar env block string
+      set_fact:
+        keylime_registrar_env_block: |
+          export KEYLIME_REGISTRAR_IP="{{ ansible_host }}"
+          export KEYLIME_REGISTRAR_PORT="{{ keylime_registrar_port }}"
+          export KEYLIME_REGISTRAR_TLS_PORT="{{ keylime_registrar_tls_port }}"
+          export KEYLIME_REGISTRAR_TLS_DIR="{{ keylime_registrar_tls_dir }}"
+          export KEYLIME_REGISTRAR_SERVER_KEY="{{ keylime_registrar_server_key }}"
+          export KEYLIME_REGISTRAR_SERVER_CERT="{{ keylime_registrar_server_cert }}"
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA={{ keylime_registrar_trusted_client_ca | to_json }}
+
+    - name: Insert Keylime Registrar env block into .bashrc
       blockinfile:
         path: /root/.bashrc
         marker: "# {mark} KEYLIME REGISTRAR ENV VARS"
-        block: |
-          export KEYLIME_REGISTRAR_IP="192.168.33.11"
-          export KEYLIME_REGISTRAR_PORT="8890"
-          export KEYLIME_REGISTRAR_TLS_PORT="8891"
-          export KEYLIME_REGISTRAR_TLS_DIR="/var/lib/keylime/cv_ca"
-          export KEYLIME_REGISTRAR_SERVER_KEY="server-private.pem"
-          export KEYLIME_REGISTRAR_SERVER_CERT="server-cert.crt"
-          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="['cacert.crt']"
+        block: "{{ keylime_registrar_env_block }}"
+
 
 - name: Configure Tenant
   hosts: keylime_tenant
@@ -147,19 +158,23 @@
         keylime_cert_patterns: 
           - "{{ playbook_dir }}/CA/client*"
   tasks:
-    - name: Set Keylime tenant environment variables for root user
+    - name: Generate Keylime Tenant env block string
+      set_fact:
+        keylime_tenant_env_block: |
+          export KEYLIME_TENANT_VERIFIER_IP="{{ hostvars['verifier']['ansible_host'] }}"
+          export KEYLIME_TENANT_VERIFIER_PORT="{{ keylime_tenant_verifier_port }}"
+          export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['registrar']['ansible_host'] }}"
+          export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
+          export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca | to_json }}
+          export KEYLIME_TENANT_CLIENT_KEY="{{ keylime_tenant_client_key }}"
+          export KEYLIME_TENANT_CLIENT_CERT="{{ keylime_tenant_client_cert }}"
+
+    - name: Insert Keylime Tenant env block into .bashrc
       blockinfile:
         path: /root/.bashrc
         marker: "# {mark} KEYLIME TENANT ENV VARS"
-        block: |
-          export KEYLIME_TENANT_VERIFIER_IP="192.168.33.12"
-          export KEYLIME_TENANT_VERIFIER_PORT="8881"
-          export KEYLIME_TENANT_REGISTRAR_IP="192.168.33.11"
-          export KEYLIME_TENANT_REGISTRAR_PORT="8891"
-          export KEYLIME_TENANT_TPM_CERT_STORE="/var/lib/keylime/tpm_cert_store"
-          export KEYLIME_TENANT_TRUSTED_SERVER_CA="['cacert.crt']"
-          export KEYLIME_TENANT_CLIENT_KEY="client-private.pem"
-          export KEYLIME_TENANT_CLIENT_CERT="client-cert.crt"    
+        block: "{{ keylime_tenant_env_block }}"    
 
 - name: Inject swtpm issuer certificate into tenant
   hosts: keylime_tenant  # Or split into separate groups for agent and tenant if needed
