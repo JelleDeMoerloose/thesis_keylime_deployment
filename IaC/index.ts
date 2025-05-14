@@ -100,6 +100,7 @@ const networkInterface = new network.NetworkInterface("network-interface", {
     }],
 });
 
+
 // Define a script to be run when the VM starts up
 const initScript = `#!/bin/bash
     echo '<!DOCTYPE html>
@@ -116,7 +117,7 @@ const initScript = `#!/bin/bash
     sudo python3 -m http.server ${servicePort} &`;
 
 // Create the virtual machine
-const vm = new compute.VirtualMachine("vm", {
+const vm = new compute.VirtualMachine(`${vmName}`, {
     resourceGroupName: existingRgName,
     networkProfile: {
         networkInterfaces: [
@@ -149,6 +150,7 @@ const vm = new compute.VirtualMachine("vm", {
         osDisk: {
             name: `${vmName}-osdisk`,
             createOption: compute.DiskCreateOption.FromImage,
+            deleteOption: "Delete",              // when VM is deleted, its OS disk is also deleted
         },
         imageReference: {
             publisher: osImagePublisher,
