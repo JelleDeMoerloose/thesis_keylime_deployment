@@ -44,7 +44,7 @@ dependencies_ubuntu:
   - libglib2.0-dev
   - libcurl4-openssl-dev
   - libgcrypt20-dev
-  - libstdc++-dev
+  - libstdc++-12-dev
   - libtool
   - libffi-dev
   - pkg-config
@@ -55,7 +55,6 @@ dependencies_ubuntu:
   - python3-sqlalchemy
   - python3-alembic
   - tpm2-tools
-  - tpm2-tss
   - libtss2-dev
   - liburiparser-dev
   - libefivar-dev
@@ -63,6 +62,12 @@ dependencies_ubuntu:
   - libssl-dev
   - libzmq3-dev
   - libarchive-dev
+  - libjson-c-dev
+  - make
+  - libclang-dev
+
+
+
 
 # section for vars
 shell_profiles:

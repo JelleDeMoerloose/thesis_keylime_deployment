@@ -1,16 +1,24 @@
----
-- name: Install dependencies on Fedora
-  dnf:
-    name: "{{ dependencies_fedora }}"
-    state: latest
-  when: ansible_distribution == "Fedora"
-
 - name: Install dependencies on Ubuntu
   apt:
     name: "{{ dependencies_ubuntu }}"
     state: present
     update_cache: yes
-  when: ansible_distribution == "Ubuntu"
+
+- name: Clone tpm2-tss repository
+  git:
+    repo: 'https://github.com/tpm2-software/tpm2-tss.git'
+    dest: '/opt/tpm2-tss'
+    version: 'master'
+
+- name: Build and install tpm2-tss
+  shell: |
+    cd /opt/tpm2-tss
+    ./bootstrap
+    ./configure --prefix=/usr
+    make
+    make install
+  args:
+    creates: /usr/lib/x86_64-linux-gnu/libtss2.so
 
 
 - name: Install Rust 
@@ -21,6 +29,7 @@
   shell: "source $HOME/.cargo/env"
   args:
     chdir: /root/
+    executable: /bin/bash
   changed_when: false  
 
 - name: Clone Rust-Keylime
@@ -28,20 +37,16 @@
     repo: https://github.com/keylime/rust-keylime
     dest: /root/rust-keylime
 
-- name: Make Rust-Keylime
-  make:
-    chdir: /root/rust-keylime
 
-- name: Make install Rust-keylime
-  make:
-    target: install
-    chdir: /root/rust-keylime
-
-- name: Run Cargo build
-  shell: "cargo build"
+- name: Build Rust-Keylime with Rustup env
+  shell: |
+    source "$HOME/.cargo/env"
+    cd /root/rust-keylime
+    make && make install
+    cargo build
   args:
-    chdir: /root/rust-keylime
-  changed_when: false
+    executable: /bin/bash
+
 
 - name: Set TPM2TOOLS_TCTI environment variable
   lineinfile:
