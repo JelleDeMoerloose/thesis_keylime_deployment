@@ -1,8 +1,17 @@
 ---
-- name: Install dependencies
+- name: Install dependencies on Fedora
   dnf:
-    name: "{{ dependencies }}"
+    name: "{{ dependencies_fedora }}"
     state: latest
+  when: ansible_distribution == "Fedora"
+
+- name: Install dependencies on Ubuntu
+  apt:
+    name: "{{ dependencies_ubuntu }}"
+    state: present
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
 
 - name: Install Rust 
   shell: "curl https://sh.rustup.rs -sSf | sh -s -- -y"

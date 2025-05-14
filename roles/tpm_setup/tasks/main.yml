@@ -4,7 +4,14 @@
       - swtpm
       - swtpm-tools
     state: present
-
+    when: ansible_distribution == "Fedora"
+- name: Install SW TPM on Ubuntu
+  apt:
+    name:
+      - swtpm
+      - swtpm-tools
+    state: present
+  when: ansible_distribution == "Ubuntu"
 - name: Set TPM2TOOLS_TCTI environment variable globally
   lineinfile:
     dest: /etc/environment
