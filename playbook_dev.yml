@@ -2,28 +2,28 @@
 - name: Configure Keylime Agent
   hosts: keylime_agent
   become: true
-  vars:
-    swtpm_enabled: true  # Set to false to disable swtpm-related tasks
   pre_tasks:
+
     - name: Ensure Python 3 is available
       dnf:
         name: python3
         state: present
+
     - name: Install libselinux-python3
       dnf:
         name: libselinux-python3
         state: present    
+
     - name: Put SELinux in permissive mode, logging actions that would be blocked.
       selinux:
         policy: targeted
         state: permissive
+
   roles:
     - ansible-keylime
     - tpm_setup
     - role: keylime_mTLS_setup
-      vars:
-        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
-        keylime_cert_dest: /var/lib/keylime/cv_ca
+
   tasks:
     - name: Generate Keylime Agent env block string
       set_fact:
@@ -43,13 +43,13 @@
         marker: "# {mark} KEYLIME AGENT ENV VARS"
         block: "{{ keylime_agent_env_block }}"
 
-    
     - name: Set ownership of /var/lib/keylime to keylime:tss
       file:
         path: /var/lib/keylime
         owner: keylime
         group: tss
         recurse: yes
+
     - name: Fetch issuer cert from agent (if swtpm_enabled is true)
       fetch:
         src: /var/lib/swtpm-localca/issuercert.pem  # Path where cert is stored on the agent
@@ -60,6 +60,7 @@
 - name: Configure Verifier
   hosts: keylime_verifier
   become: true
+
   pre_tasks:
     - name: Probe python installation
       raw: command -v python3 || true
@@ -68,15 +69,17 @@
     - name: Bootstrap a host without python installed
       raw: dnf install python3 python3-libselinux
       when: "'python' not in python_available.stdout"
+
   roles:
     - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
-        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
-        keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "{{ playbook_dir }}/CA/server*"
-          - "{{ playbook_dir }}/CA/client*"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_client_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_client_cert }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_server_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_server_cert  }}"
+
   tasks:
     
     - name: Generate Keylime Verifier env block string
@@ -94,6 +97,7 @@
           export KEYLIME_VERIFIER_CLIENT_CERT="{{ keylime_verifier_client_cert }}"
           export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca | to_json }}
           export KEYLIME_VERIFIER_QUOTE_INTERVAL="{{ keylime_verifier_quote_interval }}"
+
     - name: Set Keylime verifier environment variables for root user
       blockinfile:
         path: /root/.bashrc
@@ -103,23 +107,28 @@
 - name: Configure Registrar
   hosts: keylime_registrar
   become: true
+
   pre_tasks:
+
     - name: Probe python installation
       raw: command -v python3 || true
       changed_when: false
       register: python_available
+
     - name: Bootstrap a host without python installed
       raw: dnf install python3 python3-libselinux
       when: "'python' not in python_available.stdout"
+
   roles:
     - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
-        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
-        keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "{{ playbook_dir }}/CA/server*"
+          - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_key  }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_cert  }}"
+
   tasks:
+
     - name: Generate Keylime Registrar env block string
       set_fact:
         keylime_registrar_env_block: |
@@ -142,21 +151,23 @@
   hosts: keylime_tenant
   become: true
   pre_tasks:
+
     - name: Probe python installation
       raw: command -v python3 || true
       changed_when: false
       register: python_available
+
     - name: Bootstrap a host without python installed
       raw: dnf install python3 python3-libselinux
       when: "'python' not in python_available.stdout"
+
   roles:
     - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
-        keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
-        keylime_cert_dest: /var/lib/keylime/cv_ca
         keylime_cert_patterns: 
-          - "{{ playbook_dir }}/CA/client*"
+          - "{{ playbook_dir }}/CA/{{  keylime_tenant_client_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_tenant_client_cert }}"
   tasks:
     - name: Generate Keylime Tenant env block string
       set_fact:
@@ -179,21 +190,19 @@
 - name: Inject swtpm issuer certificate into tenant
   hosts: keylime_tenant  # Or split into separate groups for agent and tenant if needed
   become: true
-  vars:
-    swtpm_enabled: true  # Set to false to disable swtpm-related tasks
   tasks:
     # Step 2: Tenant — Copy cert to the tenant's TPM store (only if swtpm_enabled is true)
     - name: Ensure TPM cert store exists on tenant
       file:
-        path: /var/lib/keylime/tpm_cert_store
+        path: "{{ keylime_tenant_tpm_cert_store }}"
         state: directory
         mode: '0755'
-      when: swtpm_enabled
 
     - name: Copy the issuer cert from control to tenant (if swtpm_enabled is true)
       copy:
         src: "{{ playbook_dir }}/CA/issuer_cert.pem"  # Path from the control machine (after fetching)
-        dest: /var/lib/keylime/tpm_cert_store/issuer_cert.pem
+        dest: "{{ keylime_tenant_tpm_cert_store }}/issuer_cert.pem"
         mode: '0644'
-      when: swtpm_enabled
+
+  when: swtpm_enabled
 
