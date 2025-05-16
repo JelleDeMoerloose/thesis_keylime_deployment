@@ -54,6 +54,7 @@ dependencies_ubuntu:
   - python3-simplejson
   - python3-sqlalchemy
   - python3-alembic
+  - python3-pip
   - tpm2-tools
   - libtss2-dev
   - liburiparser-dev
