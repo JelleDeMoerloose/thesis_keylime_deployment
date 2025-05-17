@@ -5,3 +5,4 @@ keylime_tenant_trusted_server_ca:
   - "cacert.crt"
 keylime_tenant_client_key: "client-private.pem"
 keylime_tenant_client_cert: "client-cert.crt"
+keylime_tenant_require_ek_cert: "True"
