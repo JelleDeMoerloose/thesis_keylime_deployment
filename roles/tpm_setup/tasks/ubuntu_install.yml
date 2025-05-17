@@ -1,0 +1,72 @@
+- name: Install apparmor-utils
+  apt:
+    name: apparmor-utils
+    state: present
+    update_cache: yes
+
+- name: Set swtpm AppArmor profile to complain mode (DEV ONLY)
+  command: aa-complain /etc/apparmor.d/swtpm
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install SW TPM 
+  package:
+    name:
+      - swtpm
+      - swtpm-tools
+    state: present
+
+
+- name: Set TPM2TOOLS_TCTI environment variable globally
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    regexp: '^TPM2TOOLS_TCTI'
+    line: 'TPM2TOOLS_TCTI=device:/dev/tpm0'
+
+- name: Ensure linux-modules-extra is installed
+  ansible.builtin.apt:
+    name: "linux-modules-extra-{{ ansible_kernel }}"
+    state: present
+    update_cache: yes
+
+- name: Load tpm_vtpm_proxy kernel module
+  community.general.modprobe:
+    name: tpm_vtpm_proxy
+    state: present
+
+- name: Install TPM Emulator service
+  copy:
+    src: tpm_emulator.service
+    dest: /etc/systemd/system/tpm_emulator.service
+    mode: "0644"
+
+- name: Enable and restart TPM Emulator service
+  systemd:
+    name: tpm_emulator.service
+    enabled: yes
+    daemon_reload: yes
+    masked: no
+    state: restarted
+
+- name: IMA config directory
+  file: path=/etc/ima state=directory
+
+- name: IMA policy
+  copy:
+    src: ima-policy
+    dest: /etc/ima/ima-policy
+    mode: 0644
+
+- name: Install IMA Emulator service
+  copy:
+    src: ima_emulator_sha1.service
+    dest: /etc/systemd/system/ima_emulator.service
+    mode: "0644"
+
+- name: Enable and restart IMA Emulator service
+  systemd:
+    name: ima_emulator.service
+    enabled: yes
+    daemon_reload: yes
+    masked: no
+    state: restarted

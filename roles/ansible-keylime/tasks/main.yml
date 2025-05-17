@@ -1,42 +1,7 @@
----
-- name: Install dependencies
-  dnf:
-    name: "{{ dependencies }}"
-    state: latest
+- name: Ubuntu keylime install
+  include_tasks: ubuntu_install.yml
+  when: ansible_facts['distribution'] == 'Ubuntu'
 
-- name: Install Rust 
-  shell: "curl https://sh.rustup.rs -sSf | sh -s -- -y"
-  changed_when: false
-
-- name: Set source $HOME
-  shell: "source $HOME/.cargo/env"
-  args:
-    chdir: /root/
-  changed_when: false  
-
-- name: Clone Rust-Keylime
-  git:
-    repo: https://github.com/keylime/rust-keylime
-    dest: /root/rust-keylime
-
-- name: Make Rust-Keylime
-  make:
-    chdir: /root/rust-keylime
-
-- name: Make install Rust-keylime
-  make:
-    target: install
-    chdir: /root/rust-keylime
-
-- name: Run Cargo build
-  shell: "cargo build"
-  args:
-    chdir: /root/rust-keylime
-  changed_when: false
-
-- name: Set TPM2TOOLS_TCTI environment variable
-  lineinfile:
-    dest: /etc/environment
-    state: present
-    regexp: '^TPM2TOOLS_TCTI'
-    line: 'TPM2TOOLS_TCTI="device:/dev/tpmrm0"'
+- name: Fedora keylime install
+  include_tasks: fedora_install.yml
+  when: ansible_facts['distribution'] == 'Fedora'

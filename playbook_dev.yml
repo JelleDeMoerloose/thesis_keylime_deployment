@@ -3,22 +3,35 @@
   hosts: keylime_agent
   become: true
   pre_tasks:
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
 
-    - name: Ensure Python 3 is available
-      dnf:
-        name: python3
-        state: present
-
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+    
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
+    
     - name: Install libselinux-python3
       dnf:
         name: libselinux-python3
-        state: present    
+        state: present 
+      when: ansible_distribution == "Fedora"   
 
     - name: Put SELinux in permissive mode, logging actions that would be blocked.
       selinux:
         policy: targeted
         state: permissive
-
+      when: ansible_distribution == "Fedora"
+      
   roles:
     - ansible-keylime
     - tpm_setup
@@ -66,9 +79,18 @@
       raw: command -v python3 || true
       changed_when: false
       register: python_available
-    - name: Bootstrap a host without python installed
-      raw: dnf install python3 python3-libselinux
-      when: "'python' not in python_available.stdout"
+
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
 
   roles:
     - ansible-keylime

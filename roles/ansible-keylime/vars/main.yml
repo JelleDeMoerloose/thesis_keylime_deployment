@@ -1,6 +1,6 @@
 ---
 # requirements
-dependencies:
+dependencies_fedora:
   ['autoconf',
    'autoconf-archive',
    'automake',
@@ -33,6 +33,42 @@ dependencies:
    'openssl-devel',
    'zeromq-devel',
    'libarchive-devel']
+dependencies_ubuntu:
+  - autoconf
+  - autoconf-archive
+  - automake
+  - clang
+  - dbus
+  - gcc
+  - git
+  - libglib2.0-dev
+  - libcurl4-openssl-dev
+  - libgcrypt20-dev
+  - libstdc++-12-dev
+  - libtool
+  - libffi-dev
+  - pkg-config
+  - python3-cryptography
+  - python3-dev
+  - python3-yaml
+  - python3-simplejson
+  - python3-sqlalchemy
+  - python3-alembic
+  - python3-pip
+  - tpm2-tools
+  - libtss2-dev
+  - liburiparser-dev
+  - libefivar-dev
+  - cargo
+  - libssl-dev
+  - libzmq3-dev
+  - libarchive-dev
+  - libjson-c-dev
+  - make
+  - libclang-dev
+
+
+
 
 # section for vars
 shell_profiles:
