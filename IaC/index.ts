@@ -149,6 +149,14 @@ nohup python3 -m http.server ${servicePort} &`;
                 version: osImageVersion,
             },
         },
+        securityProfile: {
+            securityType: "TrustedLaunch",
+            uefiSettings: {
+                secureBootEnabled: true,
+                vTpmEnabled: true,
+            },
+        },
+
     });
 
     // Fetch its public IP
@@ -174,7 +182,7 @@ pulumi.all(ipOuts).apply(ips => {
     // Stitch together the final INI
     const ini = `
 [all:vars]
-ansible_user=pulumiuser
+ansible_user=${adminUsername}
 ansible_ssh_private_key_file=./ssh-key
 
 [keylime]
@@ -195,6 +203,16 @@ ${names.join(" ")}
 
     return ini;
 });
+sshKey.privateKeyOpenssh.apply(privateKey => {
+    if (!pulumi.runtime.isDryRun()) {
+        const keyPath = path.join(process.cwd(), "ssh-key");
+        fs.writeFileSync(keyPath, privateKey, { mode: 0o600 });
+        console.log(`✔ Private SSH key written to ${keyPath}`);
+    } else {
+        console.log("⏭ Preview: SSH key write skipped");
+    }
+});
+
 
 
 
