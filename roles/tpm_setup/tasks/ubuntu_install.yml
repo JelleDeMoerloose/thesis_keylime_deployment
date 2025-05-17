@@ -59,7 +59,7 @@
 
 - name: Install IMA Emulator service
   copy:
-    src: ima_emulator.service
+    src: ima_emulator_sha1.service
     dest: /etc/systemd/system/ima_emulator.service
     mode: "0644"
 
