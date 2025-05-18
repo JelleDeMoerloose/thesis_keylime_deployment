@@ -137,9 +137,17 @@
       changed_when: false
       register: python_available
 
-    - name: Bootstrap a host without python installed
-      raw: dnf install python3 python3-libselinux
-      when: "'python' not in python_available.stdout"
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
 
   roles:
     - ansible-keylime
@@ -179,9 +187,17 @@
       changed_when: false
       register: python_available
 
-    - name: Bootstrap a host without python installed
-      raw: dnf install python3 python3-libselinux
-      when: "'python' not in python_available.stdout"
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
 
   roles:
     - ansible-keylime
