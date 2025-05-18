@@ -160,7 +160,7 @@ nohup python3 -m http.server ${servicePort} &`;
     });
 
     // Fetch its public IP
-    const ip = pip.ipAddress || "";
+    const ip = pip.ipAddress
     vms.push(
         { name, ip }
     );
@@ -172,6 +172,7 @@ const ipOuts = vms.map(v => v.ip);
 
 pulumi.all(ipOuts).apply(ips => {
     // Now `ips` is a string[] with real IPs, in same order as `names`.
+    console.log("Resolved IPs:", ips); // ← Debug line
 
     // Build the [keylime] group
     const keylimeLines: string[] = [];

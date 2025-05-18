@@ -2,8 +2,9 @@ encryptionsalt: v1:xgpqRNfcUXo=:v1:9ojl5aRQca3XiDVd:KWNnvcwIjq74hNmgF9x5JH7UqteH
 config:
   azure-native:location: EASTUS2
   keylimeVMsetup:adminUsername: pulumiuser
-  keylimeVMsetup:osImage: Canonical:0001-com-ubuntu-server-jammy:22_04-lts:latest
+  keylimeVMsetup:osImage: Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest
   keylimeVMsetup:servicePort: "80"
   keylimeVMsetup:vmName: testvm
   keylimeVMsetup:vmSize: Standard_B2s
   keylimeVMsetup:RgName: Jelle-Thesis-Resources
+

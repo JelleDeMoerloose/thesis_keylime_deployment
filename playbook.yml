@@ -50,12 +50,6 @@
         group: tss
         recurse: yes
 
-    - name: Fetch issuer cert from agent (if swtpm_enabled is true)
-      fetch:
-        src: /var/lib/swtpm-localca/issuercert.pem  # Path where cert is stored on the agent
-        dest: "{{ playbook_dir }}/CA/issuer_cert.pem" # Temporary location on the control machine
-        flat: yes
-      when: swtpm_enabled
 
 - name: Configure Verifier
   hosts: keylime_verifier
@@ -197,9 +191,9 @@
     - name: Generate Keylime Tenant env block string
       set_fact:
         keylime_tenant_env_block: |
-          export KEYLIME_TENANT_VERIFIER_IP="{{ hostvars['verifier']['ansible_host'] }}"
+          export KEYLIME_TENANT_VERIFIER_IP="{{ hostvars['keylime_verifier']['ansible_host'] }}"
           export KEYLIME_TENANT_VERIFIER_PORT="{{ keylime_tenant_verifier_port }}"
-          export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['registrar']['ansible_host'] }}"
+          export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
           export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
           export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca | to_json }}
