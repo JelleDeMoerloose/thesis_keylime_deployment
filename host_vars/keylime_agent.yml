@@ -1,5 +1,7 @@
+keylime_agent_ip: "0.0.0.0"
 keylime_agent_port: "9002"
 keylime_agent_contact_port: "9002"
+keylime_agent_contact_ip: "0.0.0.0"
 keylime_agent_registrar_port: "8890"
 keylime_agent_enable_agent_mtls: true
 keylime_agent_trusted_client_ca: "cv_ca/cacert.crt"

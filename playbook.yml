@@ -28,9 +28,9 @@
     - name: Generate Keylime Agent env block string
       set_fact:
         keylime_agent_env_block: |
-          export KEYLIME_AGENT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_IP="{{ keylime_agent_ip }}"
           export KEYLIME_AGENT_PORT="{{ keylime_agent_port }}"
-          export KEYLIME_AGENT_CONTACT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_CONTACT_IP="{{ keylime_agent_contact_ip }}"
           export KEYLIME_AGENT_CONTACT_PORT="{{ keylime_agent_contact_port }}"
           export KEYLIME_AGENT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_AGENT_REGISTRAR_PORT="{{ keylime_agent_registrar_port }}"
@@ -88,17 +88,17 @@
     - name: Generate Keylime Verifier env block string
       set_fact:
         keylime_verifier_env_block: |
-          export KEYLIME_VERIFIER_IP="{{ ansible_host }}"
+          export KEYLIME_VERIFIER_IP="{{ keylime_verifier_ip }}"
           export KEYLIME_VERIFIER_PORT="{{ keylime_verifier_port }}"
           export KEYLIME_VERIFIER_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_VERIFIER_REGISTRAR_PORT="{{ keylime_verifier_registrar_port }}"
           export KEYLIME_VERIFIER_TLS_DIR="{{ keylime_verifier_tls_dir }}"
           export KEYLIME_VERIFIER_SERVER_KEY="{{ keylime_verifier_server_key }}"
           export KEYLIME_VERIFIER_SERVER_CERT="{{ keylime_verifier_server_cert }}"
-          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA={{ keylime_verifier_trusted_client_ca | to_json }}
+          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA={{ keylime_verifier_trusted_client_ca }}
           export KEYLIME_VERIFIER_CLIENT_KEY="{{ keylime_verifier_client_key }}"
           export KEYLIME_VERIFIER_CLIENT_CERT="{{ keylime_verifier_client_cert }}"
-          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca | to_json }}
+          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca  }}
           export KEYLIME_VERIFIER_QUOTE_INTERVAL="{{ keylime_verifier_quote_interval }}"
 
     - name: Set Keylime verifier environment variables for root user
@@ -143,13 +143,13 @@
     - name: Generate Keylime Registrar env block string
       set_fact:
         keylime_registrar_env_block: |
-          export KEYLIME_REGISTRAR_IP="{{ ansible_host }}"
+          export KEYLIME_REGISTRAR_IP="{{ keylime_registrar_ip }}"
           export KEYLIME_REGISTRAR_PORT="{{ keylime_registrar_port }}"
           export KEYLIME_REGISTRAR_TLS_PORT="{{ keylime_registrar_tls_port }}"
           export KEYLIME_REGISTRAR_TLS_DIR="{{ keylime_registrar_tls_dir }}"
           export KEYLIME_REGISTRAR_SERVER_KEY="{{ keylime_registrar_server_key }}"
           export KEYLIME_REGISTRAR_SERVER_CERT="{{ keylime_registrar_server_cert }}"
-          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA={{ keylime_registrar_trusted_client_ca | to_json }}
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA={{ keylime_registrar_trusted_client_ca}}
 
     - name: Insert Keylime Registrar env block into .bashrc
       blockinfile:
@@ -196,7 +196,7 @@
           export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
           export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
-          export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca | to_json }}
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca}}
           export KEYLIME_TENANT_CLIENT_KEY="{{ keylime_tenant_client_key }}"
           export KEYLIME_TENANT_CLIENT_CERT="{{ keylime_tenant_client_cert }}"
 
