@@ -1,13 +1,216 @@
 ---
-- hosts: all
+- name: Configure Keylime Agent
+  hosts: keylime_agent
   become: true
   pre_tasks:
     - name: Probe python installation
       raw: command -v python3 || true
       changed_when: false
       register: python_available
-    - name: Bootstrap a host without python installed
-      raw: dnf install python3 python3-libselinux
-      when: "'python' not in python_available.stdout"
+
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
+      
   roles:
     - ansible-keylime
+    - role: keylime_mTLS_setup
+
+  tasks:
+    - name: Generate Keylime Agent env block string
+      set_fact:
+        keylime_agent_env_block: |
+          export KEYLIME_AGENT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_PORT="{{ keylime_agent_port }}"
+          export KEYLIME_AGENT_CONTACT_IP="{{ ansible_host }}"
+          export KEYLIME_AGENT_CONTACT_PORT="{{ keylime_agent_contact_port }}"
+          export KEYLIME_AGENT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
+          export KEYLIME_AGENT_REGISTRAR_PORT="{{ keylime_agent_registrar_port }}"
+          export KEYLIME_AGENT_ENABLE_AGENT_MTLS="{{ keylime_agent_enable_agent_mtls }}"
+          export KEYLIME_AGENT_TRUSTED_CLIENT_CA="{{ keylime_agent_trusted_client_ca }}"
+
+    - name: Set Keylime agent environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME AGENT ENV VARS"
+        block: "{{ keylime_agent_env_block }}"
+
+    - name: Set ownership of /var/lib/keylime to keylime:tss
+      file:
+        path: /var/lib/keylime
+        owner: keylime
+        group: tss
+        recurse: yes
+
+    - name: Fetch issuer cert from agent (if swtpm_enabled is true)
+      fetch:
+        src: /var/lib/swtpm-localca/issuercert.pem  # Path where cert is stored on the agent
+        dest: "{{ playbook_dir }}/CA/issuer_cert.pem" # Temporary location on the control machine
+        flat: yes
+      when: swtpm_enabled
+
+- name: Configure Verifier
+  hosts: keylime_verifier
+  become: true
+
+  pre_tasks:
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
+
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
+
+  roles:
+    - ansible-keylime
+    - role: keylime_mTLS_setup
+      vars:
+        keylime_cert_patterns: 
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_client_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_client_cert }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_server_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_verifier_server_cert  }}"
+
+  tasks:
+    
+    - name: Generate Keylime Verifier env block string
+      set_fact:
+        keylime_verifier_env_block: |
+          export KEYLIME_VERIFIER_IP="{{ ansible_host }}"
+          export KEYLIME_VERIFIER_PORT="{{ keylime_verifier_port }}"
+          export KEYLIME_VERIFIER_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
+          export KEYLIME_VERIFIER_REGISTRAR_PORT="{{ keylime_verifier_registrar_port }}"
+          export KEYLIME_VERIFIER_TLS_DIR="{{ keylime_verifier_tls_dir }}"
+          export KEYLIME_VERIFIER_SERVER_KEY="{{ keylime_verifier_server_key }}"
+          export KEYLIME_VERIFIER_SERVER_CERT="{{ keylime_verifier_server_cert }}"
+          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA={{ keylime_verifier_trusted_client_ca | to_json }}
+          export KEYLIME_VERIFIER_CLIENT_KEY="{{ keylime_verifier_client_key }}"
+          export KEYLIME_VERIFIER_CLIENT_CERT="{{ keylime_verifier_client_cert }}"
+          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca | to_json }}
+          export KEYLIME_VERIFIER_QUOTE_INTERVAL="{{ keylime_verifier_quote_interval }}"
+
+    - name: Set Keylime verifier environment variables for root user
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME VERIFIER ENV VARS"
+        block: "{{ keylime_verifier_env_block }}"
+
+- name: Configure Registrar
+  hosts: keylime_registrar
+  become: true
+
+  pre_tasks:
+
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
+
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
+
+  roles:
+    - ansible-keylime
+    - role: keylime_mTLS_setup
+      vars:
+        keylime_cert_patterns: 
+          - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_key  }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_cert  }}"
+
+  tasks:
+
+    - name: Generate Keylime Registrar env block string
+      set_fact:
+        keylime_registrar_env_block: |
+          export KEYLIME_REGISTRAR_IP="{{ ansible_host }}"
+          export KEYLIME_REGISTRAR_PORT="{{ keylime_registrar_port }}"
+          export KEYLIME_REGISTRAR_TLS_PORT="{{ keylime_registrar_tls_port }}"
+          export KEYLIME_REGISTRAR_TLS_DIR="{{ keylime_registrar_tls_dir }}"
+          export KEYLIME_REGISTRAR_SERVER_KEY="{{ keylime_registrar_server_key }}"
+          export KEYLIME_REGISTRAR_SERVER_CERT="{{ keylime_registrar_server_cert }}"
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA={{ keylime_registrar_trusted_client_ca | to_json }}
+
+    - name: Insert Keylime Registrar env block into .bashrc
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME REGISTRAR ENV VARS"
+        block: "{{ keylime_registrar_env_block }}"
+
+
+- name: Configure Tenant
+  hosts: keylime_tenant
+  become: true
+  pre_tasks:
+
+    - name: Probe python installation
+      raw: command -v python3 || true
+      changed_when: false
+      register: python_available
+
+    - name: Install Python on Fedora
+      raw: dnf install -y python3 python3-libselinux
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Fedora"
+
+    - name: Install Python on Ubuntu
+      raw: apt-get update && apt-get install -y python3
+      when:
+        - "'python' not in python_available.stdout"
+        - ansible_distribution == "Ubuntu"
+
+  roles:
+    - ansible-keylime
+    - role: keylime_mTLS_setup
+      vars:
+        keylime_cert_patterns: 
+          - "{{ playbook_dir }}/CA/{{  keylime_tenant_client_key }}"
+          - "{{ playbook_dir }}/CA/{{  keylime_tenant_client_cert }}"
+  tasks:
+    - name: Generate Keylime Tenant env block string
+      set_fact:
+        keylime_tenant_env_block: |
+          export KEYLIME_TENANT_VERIFIER_IP="{{ hostvars['verifier']['ansible_host'] }}"
+          export KEYLIME_TENANT_VERIFIER_PORT="{{ keylime_tenant_verifier_port }}"
+          export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['registrar']['ansible_host'] }}"
+          export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
+          export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca | to_json }}
+          export KEYLIME_TENANT_CLIENT_KEY="{{ keylime_tenant_client_key }}"
+          export KEYLIME_TENANT_CLIENT_CERT="{{ keylime_tenant_client_cert }}"
+
+    - name: Insert Keylime Tenant env block into .bashrc
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME TENANT ENV VARS"
+        block: "{{ keylime_tenant_env_block }}"    
+
+
+
