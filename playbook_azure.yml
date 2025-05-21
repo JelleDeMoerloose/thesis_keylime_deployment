@@ -87,7 +87,7 @@
       git:
         repo: 'https://github.com/JelleDeMoerloose/keylime_thesis'
         dest: /root/keylime
-        version: your-branch
+        version: main
 
     - name: Install custom Keylime with pip
       pip:
