@@ -95,10 +95,10 @@
           export KEYLIME_VERIFIER_TLS_DIR="{{ keylime_verifier_tls_dir }}"
           export KEYLIME_VERIFIER_SERVER_KEY="{{ keylime_verifier_server_key }}"
           export KEYLIME_VERIFIER_SERVER_CERT="{{ keylime_verifier_server_cert }}"
-          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA={{ keylime_verifier_trusted_client_ca }}
+          export KEYLIME_VERIFIER_TRUSTED_CLIENT_CA="['{{ keylime_verifier_trusted_client_ca }}']"
           export KEYLIME_VERIFIER_CLIENT_KEY="{{ keylime_verifier_client_key }}"
           export KEYLIME_VERIFIER_CLIENT_CERT="{{ keylime_verifier_client_cert }}"
-          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA={{ keylime_verifier_trusted_server_ca  }}
+          export KEYLIME_VERIFIER_TRUSTED_SERVER_CA="['{{ keylime_verifier_trusted_server_ca }}']"
           export KEYLIME_VERIFIER_QUOTE_INTERVAL="{{ keylime_verifier_quote_interval }}"
 
     - name: Set Keylime verifier environment variables for root user
@@ -149,7 +149,7 @@
           export KEYLIME_REGISTRAR_TLS_DIR="{{ keylime_registrar_tls_dir }}"
           export KEYLIME_REGISTRAR_SERVER_KEY="{{ keylime_registrar_server_key }}"
           export KEYLIME_REGISTRAR_SERVER_CERT="{{ keylime_registrar_server_cert }}"
-          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA={{ keylime_registrar_trusted_client_ca}}
+          export KEYLIME_REGISTRAR_TRUSTED_CLIENT_CA="['{{ keylime_registrar_trusted_client_ca }}']"
 
     - name: Insert Keylime Registrar env block into .bashrc
       blockinfile:
@@ -196,7 +196,7 @@
           export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
           export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
-          export KEYLIME_TENANT_TRUSTED_SERVER_CA={{ keylime_tenant_trusted_server_ca}}
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA="['{{ keylime_tenant_trusted_server_ca}}']""
           export KEYLIME_TENANT_CLIENT_KEY="{{ keylime_tenant_client_key }}"
           export KEYLIME_TENANT_CLIENT_CERT="{{ keylime_tenant_client_cert }}"
 

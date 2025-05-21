@@ -1,7 +1,7 @@
 keylime_tenant_verifier_port: "8881"
 keylime_tenant_registrar_port: "8891"
 keylime_tenant_tpm_cert_store: "/var/lib/keylime/tpm_cert_store"
-keylime_tenant_trusted_server_ca: "['cacert.crt']"
+keylime_tenant_trusted_server_ca: "cacert.crt"
 keylime_tenant_client_key: "client-private.pem"
 keylime_tenant_client_cert: "client-cert.crt"
 keylime_tenant_require_ek_cert: "True"

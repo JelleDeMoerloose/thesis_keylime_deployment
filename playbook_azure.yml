@@ -93,6 +93,12 @@
         chdir: /root/keylime
         editable: true
         name: .
+    
+    - name: Upgrade cryptography library via pip
+      pip:
+        name: "cryptography>=38.0"
+        state: latest
+        executable: pip3
 
 
 - name: Change Keylime TENANT for Azure vTPM
