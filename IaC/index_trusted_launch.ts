@@ -82,11 +82,8 @@ const securityGroup = new network.NetworkSecurityGroup("security-group", {
 interface VMInfo { name: string; ip: pulumi.Output<string | undefined>; }
 const vms: VMInfo[] = [];
 
-// first vm is a confidential Virtual machine 
 for (let i = 0; i < count; i++) {
-    const isConfidential = i === 0;
-    const name = isConfidential ? `confvm-${i}` : `vm-${i}`;
-
+    const name = `vm-${i}`;
 
     // Public IP + DNS label
     const pip = new network.PublicIPAddress(`${name}-pip`, {
@@ -111,17 +108,20 @@ for (let i = 0; i < count; i++) {
         }],
     });
 
-    // Init script
+    // Only install HTTP on the first two
     let customData: string | undefined;
-    if (isConfidential) {
-        const initScript = `#!/bin/bash\necho "Confidential VM initialized."`;
+    if (i < 2) {
+        const initScript = `#!/bin/bash
+echo '<html><body><h1>Hello from ${name}</h1></body></html>' > index.html
+nohup python3 -m http.server ${servicePort} &`;
         customData = Buffer.from(initScript).toString("base64");
     }
 
+    // VM
     const vm = new compute.VirtualMachine(name, {
         resourceGroupName: existingRgName,
         networkProfile: { networkInterfaces: [{ id: nic.id, primary: true }] },
-        hardwareProfile: { vmSize: isConfidential ? "Standard_DC2as_v5" : vmSize },
+        hardwareProfile: { vmSize },
         osProfile: {
             computerName: name,
             adminUsername,
@@ -142,12 +142,7 @@ for (let i = 0; i < count; i++) {
                 createOption: compute.DiskCreateOption.FromImage,
                 deleteOption: "Delete",
             },
-            imageReference: isConfidential ? {
-                publisher: "Canonical",
-                offer: "0001-com-ubuntu-confidential-vm-jammy",
-                sku: "22_04-lts-cvm",
-                version: "latest",
-            } : {
+            imageReference: {
                 publisher: osImagePublisher,
                 offer: osImageOffer,
                 sku: osImageSku,
@@ -155,18 +150,21 @@ for (let i = 0; i < count; i++) {
             },
         },
         securityProfile: {
-            securityType: isConfidential ? "ConfidentialVM" : "TrustedLaunch",
+            securityType: "TrustedLaunch",
             uefiSettings: {
                 secureBootEnabled: true,
                 vTpmEnabled: true,
             },
-        }
+        },
+
     });
 
-    const ip = pip.ipAddress;
-    vms.push({ name, ip });
+    // Fetch its public IP
+    const ip = pip.ipAddress
+    vms.push(
+        { name, ip }
+    );
 }
-
 
 // 2) Wait for all VM IPs, then build + write hosts.ini:
 const names = vms.map(v => v.name);
