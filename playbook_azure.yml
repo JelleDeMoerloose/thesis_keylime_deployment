@@ -5,7 +5,7 @@
   tasks:
     - name: Ensure certificate directory exists
       file:
-        path: "{{ cert_output_dir }}"
+        path: "{{ aik_cert_output_dir }}"
         state: directory
         mode: '0755'
 
@@ -25,7 +25,7 @@
     - name: Move .crt certificate to destination directory
       copy:
         src: /tmp/iak_cert.crt
-        dest: "{{ cert_output_dir }}/iak_cert.crt"
+        dest: "{{ aik_cert_output_dir }}/iak_cert.crt"
         mode: '0644'
 
     - name: Define new env Agent variables for Azure vTPM
@@ -33,9 +33,9 @@
         keylime_agent_env_block: |
           export KEYLIME_AGENT_ENABLE_IAK_IDEVID=true
           export KEYLIME_AGENT_IAK_HANDLE=0x81000003
-          export KEYLIME_AGENT_IAK_CERT="{{ cert_output_dir }}/iak_cert.crt"
+          export KEYLIME_AGENT_IAK_CERT="{{ aik_cert_output_dir }}/iak_cert.crt"
           export KEYLIME_AGENT_IDEVID_HANDLE=0x81000003
-          export KEYLIME_AGENT_IDEVID_CERT="{{ cert_output_dir }}/iak_cert.crt"
+          export KEYLIME_AGENT_IDEVID_CERT="{{ aik_cert_output_dir }}/iak_cert.crt"
 
 
     - name: Set Keylime agent environment variables for Azure vTPM
@@ -108,7 +108,7 @@
 - name: Change Keylime TENANT for Azure vTPM
   hosts: keylime_tenant
   become: true
-  
+
   tasks:
 
     - name: Define new env Tenant variables for Azure vTPM
