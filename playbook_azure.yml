@@ -27,6 +27,7 @@
         src: /tmp/iak_cert.crt
         dest: "{{ aik_cert_output_dir }}/iak_cert.crt"
         mode: '0644'
+        remote_src: true
 
     - name: Define new env Agent variables for Azure vTPM
       set_fact:
@@ -59,6 +60,12 @@
         state: directory
         mode: '0755'
 
+    - name: Copy P7B certificate from controller to registrar
+      copy:
+        src: "{{ playbook_dir }}/{{ source_cert_path }}"
+        dest: "/tmp/{{ source_cert_path }}"
+        mode: '0644'
+        
     - name: Convert P7B certificate to PEM format
       command: >
         openssl pkcs7 -print_certs
@@ -74,6 +81,7 @@
         owner: root
         group: root
         mode: '0644'
+        remote_src: true
 
     - name: Define new env Registrar variables for Azure vTPM
       set_fact:
