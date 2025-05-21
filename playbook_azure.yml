@@ -1,0 +1,124 @@
+- name: Prepare Keylime Agent for Azure vTPM
+  hosts: keylime_agent
+  become: true
+
+  tasks:
+    - name: Ensure certificate directory exists
+      file:
+        path: "{{ cert_output_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Read IAK certificate from TPM NV index
+      command: >
+        tpm2_nvread 0x1C101D0 -C o -o /tmp/iak_cert.der
+      args:
+        creates: /tmp/iak_cert.der
+
+    - name: Convert IAK certificate to PEM format with .crt extension
+      command: >
+        openssl x509 -in /tmp/iak_cert.der -inform der
+        -out /tmp/iak_cert.crt -outform pem
+      args:
+        creates: /tmp/iak_cert.crt
+
+    - name: Move .crt certificate to destination directory
+      copy:
+        src: /tmp/iak_cert.crt
+        dest: "{{ cert_output_dir }}/iak_cert.crt"
+        mode: '0644'
+
+    - name: Define new env Agent variables for Azure vTPM
+      set_fact:
+        keylime_agent_env_block: |
+          export KEYLIME_AGENT_ENABLE_IAK_IDEVID=true
+          export KEYLIME_AGENT_IAK_HANDLE=0x81000003
+          export KEYLIME_AGENT_IAK_CERT="{{ cert_output_dir }}/iak_cert.crt"
+          export KEYLIME_AGENT_IDEVID_HANDLE=0x81000003
+          export KEYLIME_AGENT_IDEVID_CERT="{{ cert_output_dir }}/iak_cert.crt"
+
+
+    - name: Set Keylime agent environment variables for Azure vTPM
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME AGENT ENV VARS"
+        block: "{{ keylime_agent_env_block }}"
+
+
+- name: Change Keylime registrar for Azure vTPM
+  hosts: keylime_registrar
+  become: true
+  vars:
+    source_cert_path: "azure_root.crt"
+    dest_cert_path: "/var/lib/keylime/tpm_cert_store/azure_root.pem"
+
+  tasks:
+    - name: Ensure destination directory exists
+      file:
+        path: "/var/lib/keylime/tpm_cert_store"
+        state: directory
+        mode: '0755'
+
+    - name: Convert P7B certificate to PEM format
+      command: >
+        openssl pkcs7 -print_certs
+        -in {{ playbook_dir }}/{{ source_cert_path }}
+        -out /tmp/iak_cert.pem
+      args:
+        creates: /tmp/iak_cert.pem
+
+    - name: Copy PEM certificate to Keylime store
+      copy:
+        src: /tmp/iak_cert.pem
+        dest: "{{ dest_cert_path }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Define new env Registrar variables for Azure vTPM
+      set_fact:
+        keylime_registrar_env_block: |
+          export KEYLIME_REGISTRAR_TPM_IDENTITY=iak_idevid
+
+
+    - name: Set Keylime Registrar environment variables for Azure vTPM
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME REGISTRAR ENV VARS"
+        block: "{{ keylime_registrar_env_block }}"
+
+    - name: Remove default Keylime clone
+      file:
+        path: /root/keylime
+        state: absent
+
+    - name: Clone custom Keylime fork
+      git:
+        repo: 'https://github.com/JelleDeMoerloose/keylime_thesis.git'
+        dest: /root/keylime
+        version: your-branch
+
+    - name: Install custom Keylime with pip
+      pip:
+        chdir: /root/keylime
+        editable: true
+        name: .
+
+
+- name: Change Keylime TENANT for Azure vTPM
+  hosts: keylime_tenant
+  become: true
+  
+  tasks:
+
+    - name: Define new env Tenant variables for Azure vTPM
+      set_fact:
+        keylime_tenant_env_block: |
+          export KEYLIME_TENANT_REQUIRE_EK_CERT=False
+
+    - name: Set Keylime Tenant environment variables for Azure vTPM
+      blockinfile:
+        path: /root/.bashrc
+        marker: "# {mark} KEYLIME TENANT ENV VARS"
+        block: "{{ keylime_tenant_env_block }}"
+    
