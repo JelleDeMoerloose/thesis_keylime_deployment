@@ -5,5 +5,5 @@ keylime_agent_contact_ip: "0.0.0.0"
 keylime_agent_registrar_port: "8890"
 keylime_agent_enable_agent_mtls: true
 keylime_agent_trusted_client_ca: "cv_ca/cacert.crt"
-aik_cert_output_dir: "/var/lib/keylime/cv_ca/"
+aik_cert_output_dir: "/var/lib/keylime/cv_ca"
 aik_handle: "0x81000003"
