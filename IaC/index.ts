@@ -91,12 +91,16 @@ for (let i = 0; i < count; i++) {
     // Public IP + DNS label
     const pip = new network.PublicIPAddress(`${name}-pip`, {
         resourceGroupName: existingRgName,
-        publicIPAllocationMethod: network.IPAllocationMethod.Dynamic,
+        publicIPAllocationMethod: isConfidential
+            ? network.IPAllocationMethod.Static
+            : network.IPAllocationMethod.Dynamic,
         dnsSettings: {
             domainNameLabel: new random.RandomString(`${name}-dns`, {
                 length: 8, upper: false, special: false,
             }).result.apply(r => `${name}-${r}`),
         },
+        zones: isConfidential ? ["2"] : undefined, // Ensure zone matches the VM
+        sku: isConfidential ? { name: "Standard" } : undefined,  // 👈 ADD THIS LINE
     });
 
     // NIC
@@ -123,12 +127,12 @@ EOF
 # Apply the policy
 sudo cat /home/${adminUsername}/file_policy > /sys/kernel/security/ima/policy
 `;
-        const initScript = `#!/bin/bash\necho "Confidential VM initialized."`;
         customData = Buffer.from(initScript).toString("base64");
     }
 
     const vm = new compute.VirtualMachine(name, {
         resourceGroupName: existingRgName,
+        zones: isConfidential ? ["2"] : undefined, // Specifies Availability Zone 2 --> confidential computing only in zone 2 and 3, not in 1
         networkProfile: { networkInterfaces: [{ id: nic.id, primary: true }] },
         hardwareProfile: { vmSize: isConfidential ? "Standard_DC2as_v5" : vmSize },
         osProfile: {
@@ -146,10 +150,23 @@ sudo cat /home/${adminUsername}/file_policy > /sys/kernel/security/ima/policy
             },
         },
         storageProfile: {
-            osDisk: {
+            osDisk: isConfidential ? {
                 name: `${name}-osdisk`,
                 createOption: compute.DiskCreateOption.FromImage,
                 deleteOption: "Delete",
+                managedDisk: {
+                    storageAccountType: "Standard_LRS",
+                    securityProfile: {
+                        securityEncryptionType: "DiskWithVMGuestState", // otherwise i got errors
+                    },
+                },
+            } : {
+                name: `${name}-osdisk`,
+                createOption: compute.DiskCreateOption.FromImage,
+                deleteOption: "Delete",
+                managedDisk: {
+                    storageAccountType: "Standard_LRS",
+                },
             },
             imageReference: isConfidential ? {
                 publisher: "Canonical",
@@ -169,7 +186,7 @@ sudo cat /home/${adminUsername}/file_policy > /sys/kernel/security/ima/policy
                 secureBootEnabled: true,
                 vTpmEnabled: true,
             },
-        }
+        },
     });
 
     const ip = pip.ipAddress;
