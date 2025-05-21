@@ -196,7 +196,7 @@
           export KEYLIME_TENANT_REGISTRAR_IP="{{ hostvars['keylime_registrar']['ansible_host'] }}"
           export KEYLIME_TENANT_REGISTRAR_PORT="{{ keylime_tenant_registrar_port }}"
           export KEYLIME_TENANT_TPM_CERT_STORE="{{ keylime_tenant_tpm_cert_store }}"
-          export KEYLIME_TENANT_TRUSTED_SERVER_CA="['{{ keylime_tenant_trusted_server_ca}}']""
+          export KEYLIME_TENANT_TRUSTED_SERVER_CA="['{{ keylime_tenant_trusted_server_ca}}']"
           export KEYLIME_TENANT_CLIENT_KEY="{{ keylime_tenant_client_key }}"
           export KEYLIME_TENANT_CLIENT_CERT="{{ keylime_tenant_client_cert }}"
 

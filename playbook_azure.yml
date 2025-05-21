@@ -42,7 +42,7 @@
     - name: Set Keylime agent environment variables for Azure vTPM
       blockinfile:
         path: /root/.bashrc
-        marker: "# {mark} KEYLIME AGENT ENV VARS"
+        marker: "# {mark} AZURE VTPM KEYLIME AGENT ENV VARS"
         block: "{{ keylime_agent_env_block }}"
 
 
@@ -75,7 +75,7 @@
     - name: Set Keylime Registrar environment variables for Azure vTPM
       blockinfile:
         path: /root/.bashrc
-        marker: "# {mark} KEYLIME REGISTRAR ENV VARS"
+        marker: "# {mark}  AZURE VTPM KEYLIME REGISTRAR ENV VARS"
         block: "{{ keylime_registrar_env_block }}"
 
     - name: Remove default Keylime clone
@@ -115,6 +115,6 @@
     - name: Set Keylime Tenant environment variables for Azure vTPM
       blockinfile:
         path: /root/.bashrc
-        marker: "# {mark} KEYLIME TENANT ENV VARS"
+        marker: "# {mark}  AZURE VTPM KEYLIME TENANT ENV VARS"
         block: "{{ keylime_tenant_env_block }}"
     
