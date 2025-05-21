@@ -118,7 +118,7 @@ for (let i = 0; i < count; i++) {
     // Init script
     let customData: string | undefined;
     if (isConfidential) {
-        const filePolicyContent = fs.readFileSync(IMA_policy_name, "utf8");
+        const filePolicyContent = fs.readFileSync(IMA_policy_name, "utf8").replace(/\r\n/g, "\n");;
         const initScript = `#!/bin/bash
 cat <<EOF > /home/${adminUsername}/file_policy
 ${filePolicyContent}
