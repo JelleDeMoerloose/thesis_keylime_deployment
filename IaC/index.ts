@@ -16,7 +16,7 @@ const adminUsername = config.get("adminUsername") || "pulumiuser";
 const servicePort = config.get("servicePort") || "80";
 const existingRgName = config.get("RgName") || "";
 const count = config.getNumber("vmCount") || 4;
-
+const IMA_policy_name = config.get("ima_policy_file") || "./simple_ima_policy"
 
 const [osImagePublisher, osImageOffer, osImageSku, osImageVersion] = osImage.split(":");
 
@@ -114,6 +114,15 @@ for (let i = 0; i < count; i++) {
     // Init script
     let customData: string | undefined;
     if (isConfidential) {
+        const filePolicyContent = fs.readFileSync(IMA_policy_name, "utf8");
+        const initScript = `#!/bin/bash
+cat <<EOF > /home/${adminUsername}/file_policy
+${filePolicyContent}
+EOF
+
+# Apply the policy
+sudo cat /home/${adminUsername}/file_policy > /sys/kernel/security/ima/policy
+`;
         const initScript = `#!/bin/bash\necho "Confidential VM initialized."`;
         customData = Buffer.from(initScript).toString("base64");
     }
