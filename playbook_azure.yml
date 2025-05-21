@@ -51,7 +51,7 @@
   become: true
   vars:
     source_cert_path: "azure_root.crt"
-    dest_cert_path: "/var/lib/keylime/tpm_cert_store/azure_root.pem"
+    dest_cert_path: "/var/lib/keylime/tpm_cert_store"
 
   tasks:
     - name: Ensure destination directory exists
@@ -63,25 +63,8 @@
     - name: Copy P7B certificate from controller to registrar
       copy:
         src: "{{ playbook_dir }}/{{ source_cert_path }}"
-        dest: "/tmp/{{ source_cert_path }}"
+        dest: "{{ dest_cert_path }}/azure_root.pem"
         mode: '0644'
-        
-    - name: Convert P7B certificate to PEM format
-      command: >
-        openssl pkcs7 -print_certs
-        -in {{ playbook_dir }}/{{ source_cert_path }}
-        -out /tmp/iak_cert.pem
-      args:
-        creates: /tmp/iak_cert.pem
-
-    - name: Copy PEM certificate to Keylime store
-      copy:
-        src: /tmp/iak_cert.pem
-        dest: "{{ dest_cert_path }}"
-        owner: root
-        group: root
-        mode: '0644'
-        remote_src: true
 
     - name: Define new env Registrar variables for Azure vTPM
       set_fact:
