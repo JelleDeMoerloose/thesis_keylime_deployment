@@ -85,7 +85,7 @@
 
     - name: Clone custom Keylime fork
       git:
-        repo: 'https://github.com/JelleDeMoerloose/keylime_thesis.git'
+        repo: 'https://github.com/JelleDeMoerloose/keylime_thesis'
         dest: /root/keylime
         version: your-branch
 
