@@ -63,8 +63,14 @@
     - name: Copy P7B certificate from controller to registrar
       copy:
         src: "{{ playbook_dir }}/{{ source_cert_path }}"
-        dest: "{{ dest_cert_path }}/azure_root.pem"
+        dest: "{{ dest_cert_path }}/azure_root.p7b"
         mode: '0644'
+
+    - name: Convert P7B certificate to PEM format on registrar
+      command: >
+        openssl pkcs7 -print_certs -in {{ dest_cert_path }}/azure_root.p7b -out {{ dest_cert_path }}/azure_root.pem
+      args:
+        creates: "{{ dest_cert_path }}/azure_root.pem"
 
     - name: Define new env Registrar variables for Azure vTPM
       set_fact:
