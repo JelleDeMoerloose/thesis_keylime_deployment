@@ -1,0 +1,71 @@
+@startuml
+
+actor User
+
+participant "Ansible Control Node" as ANS
+
+participant "Agent" as AG
+participant "Registrar" as RG
+participant "Verifier" as VF
+participant "Tenant" as TN
+
+User -> ANS: Run playbook
+activate ANS
+ANS -> AG : Run Keylime Provisioning Role
+activate AG
+ANS -> RG 
+activate RG
+ANS -> VF 
+activate VF
+ANS -> TN 
+activate TN
+
+AG --> ANS 
+deactivate AG
+RG --> ANS
+deactivate RG
+VF --> ANS 
+deactivate VF
+TN --> ANS 
+deactivate TN
+
+ANS -> AG : Distribute certificates & Configure
+activate AG
+AG --> ANS 
+deactivate AG 
+
+ANS -> RG : Distribute certificates & Configure
+activate RG
+RG --> ANS 
+deactivate RG
+
+ANS -> VF : Distribute certificates & Configure
+activate VF
+VF --> ANS 
+deactivate VF
+
+ANS -> TN : Distribute certificates & Configure 
+activate TN
+TN --> ANS
+deactivate TN
+
+
+
+
+
+
+alt swtpm_enabled == true
+    ANS -> AG : Apply TPM setup role
+    activate AG
+    AG --> ANS : TPM Emulator + IMA configured
+    deactivate AG
+    ANS -> TN : Copy TPM Emulator issuer certificate
+    activate TN
+    TN --> ANS
+    deactivate TN
+end  
+
+ANS --> User
+deactivate ANS
+
+@enduml
