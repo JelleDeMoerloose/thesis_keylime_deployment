@@ -1,6 +1,6 @@
 ---
-- name: Configure Keylime Agent
-  hosts: keylime_agent
+- name: Provision Keylime on all hosts
+  hosts: all
   become: true
   pre_tasks:
     - name: Probe python installation
@@ -22,6 +22,12 @@
       
   roles:
     - ansible-keylime
+
+- name: Configure Keylime Agent
+  hosts: keylime_agent
+  become: true
+      
+  roles:
     - role: keylime_mTLS_setup
 
   tasks:
@@ -54,27 +60,7 @@
 - name: Configure Verifier
   hosts: keylime_verifier
   become: true
-
-  pre_tasks:
-    - name: Probe python installation
-      raw: command -v python3 || true
-      changed_when: false
-      register: python_available
-
-    - name: Install Python on Fedora
-      raw: dnf install -y python3 python3-libselinux
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Fedora"
-
-    - name: Install Python on Ubuntu
-      raw: apt-get update && apt-get install -y python3
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Ubuntu"
-
   roles:
-    - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
         keylime_cert_patterns: 
@@ -84,7 +70,6 @@
           - "{{ playbook_dir }}/CA/{{  keylime_verifier_server_cert  }}"
 
   tasks:
-    
     - name: Generate Keylime Verifier env block string
       set_fact:
         keylime_verifier_env_block: |
@@ -110,36 +95,13 @@
 - name: Configure Registrar
   hosts: keylime_registrar
   become: true
-
-  pre_tasks:
-
-    - name: Probe python installation
-      raw: command -v python3 || true
-      changed_when: false
-      register: python_available
-
-    - name: Install Python on Fedora
-      raw: dnf install -y python3 python3-libselinux
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Fedora"
-
-    - name: Install Python on Ubuntu
-      raw: apt-get update && apt-get install -y python3
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Ubuntu"
-
   roles:
-    - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
         keylime_cert_patterns: 
           - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_key  }}"
           - "{{ playbook_dir }}/CA/{{  keylime_registrar_server_cert  }}"
-
   tasks:
-
     - name: Generate Keylime Registrar env block string
       set_fact:
         keylime_registrar_env_block: |
@@ -161,27 +123,7 @@
 - name: Configure Tenant
   hosts: keylime_tenant
   become: true
-  pre_tasks:
-
-    - name: Probe python installation
-      raw: command -v python3 || true
-      changed_when: false
-      register: python_available
-
-    - name: Install Python on Fedora
-      raw: dnf install -y python3 python3-libselinux
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Fedora"
-
-    - name: Install Python on Ubuntu
-      raw: apt-get update && apt-get install -y python3
-      when:
-        - "'python' not in python_available.stdout"
-        - ansible_distribution == "Ubuntu"
-
   roles:
-    - ansible-keylime
     - role: keylime_mTLS_setup
       vars:
         keylime_cert_patterns: 
