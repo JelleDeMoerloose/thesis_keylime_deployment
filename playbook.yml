@@ -153,52 +153,37 @@
 - name: Install Emulators on Agent (only in development)
   hosts: keylime_agent
   become: true
-  when: 
-  pre_tasks:
 
+  pre_tasks:
     - name: Install libselinux-python3
       dnf:
         name: libselinux-python3
-        state: present 
+        state: present
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
 
     - name: Put SELinux in permissive mode, logging actions that would be blocked.
       selinux:
         policy: targeted
         state: permissive
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
 
   roles:
     - tpm_setup
-  tasks:
 
+  tasks:
     - name: Fetch issuer cert from swtpm
       fetch:
-        src: /var/lib/swtpm-localca/issuercert.pem  # Path where swtpm issuer cert is stored on the agent
-        dest: "{{ playbook_dir }}/CA/issuer_cert.pem" # Temporary location on the control machine
+        src: /var/lib/swtpm-localca/issuercert.pem
+        dest: "{{ playbook_dir }}/CA/issuer_cert.pem"
         flat: yes
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
 
-  when:
-    - ansible_distribution == "Fedora"
-    - swtpm_enabled | default(false)
-
-- name: Inject swtpm issuer certificate into tenant
-  hosts: keylime_tenant  
-  become: true
-  tasks:
-    - name: Ensure TPM cert store exists on tenant
-      file:
-        path: "{{ keylime_tenant_tpm_cert_store }}"
-        state: directory
-        mode: '0755'
-
-    - name: Copy the issuer cert from control to tenant (if swtpm_enabled is true)
-      copy:
-        src: "{{ playbook_dir }}/CA/issuer_cert.pem"  # Path from the control machine (after fetching)
-        dest: "{{ keylime_tenant_tpm_cert_store }}/issuer_cert.pem"
-        mode: '0644'
-
-  when:
-    - ansible_distribution == "Fedora"
-    - swtpm_enabled | default(false)
 
 
   
