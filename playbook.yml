@@ -153,7 +153,6 @@
 - name: Install Emulators on Agent (only in development)
   hosts: keylime_agent
   become: true
-
   pre_tasks:
     - name: Install libselinux-python3
       dnf:
@@ -172,7 +171,10 @@
         - swtpm_enabled | default(false)
 
   roles:
-    - tpm_setup
+    - role: tpm_setup
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
 
   tasks:
     - name: Fetch issuer cert from swtpm
@@ -180,6 +182,28 @@
         src: /var/lib/swtpm-localca/issuercert.pem
         dest: "{{ playbook_dir }}/CA/issuer_cert.pem"
         flat: yes
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
+
+- name: Inject swtpm issuer certificate into tenant
+  hosts: keylime_tenant
+  become: true
+  tasks:
+    - name: Ensure TPM cert store exists on tenant
+      file:
+        path: "{{ keylime_tenant_tpm_cert_store }}"
+        state: directory
+        mode: '0755'
+      when:
+        - ansible_distribution == "Fedora"
+        - swtpm_enabled | default(false)
+
+    - name: Copy the issuer cert from control to tenant (if swtpm_enabled is true)
+      copy:
+        src: "{{ playbook_dir }}/CA/issuer_cert.pem"
+        dest: "{{ keylime_tenant_tpm_cert_store }}/issuer_cert.pem"
+        mode: '0644'
       when:
         - ansible_distribution == "Fedora"
         - swtpm_enabled | default(false)
