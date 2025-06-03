@@ -1,3 +1,3 @@
 keylime_rootca_cert: "{{ playbook_dir }}/CA/cacert.crt"
 keylime_cert_dest: /var/lib/keylime/cv_ca
-swtpm_enabled: true  # Set to false to disable all swtpm-related tasks globally
+swtpm_enabled: false  # Set to false to disable all swtpm-related tasks globally
