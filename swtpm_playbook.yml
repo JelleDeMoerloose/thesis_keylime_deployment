@@ -1,5 +1,0 @@
-- name: Configure Keylime Agent
-  hosts: keylime_agent
-  become: true 
-  roles:
-    - tpm_setup

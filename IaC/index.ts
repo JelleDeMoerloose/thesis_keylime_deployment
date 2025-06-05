@@ -9,14 +9,12 @@ import * as path from "path";
 
 // Import the program's configuration settings
 const config = new pulumi.Config();
-const vmName = config.get("vmName") || "my-server";
 const vmSize = config.get("vmSize") || "Standard_A1_v2";
 const osImage = config.get("osImage") || "Debian:debian-11:11:latest";
 const adminUsername = config.get("adminUsername") || "pulumiuser";
-const servicePort = config.get("servicePort") || "80";
 const existingRgName = config.get("RgName") || "";
-const count = config.getNumber("vmCount") || 4;
 const IMA_policy_name = config.get("ima_policy_file") || "./simple_ima_policy"
+const vmRoles = config.requireObject<string[]>("vmRoles");
 
 const [osImagePublisher, osImageOffer, osImageSku, osImageVersion] = osImage.split(":");
 
@@ -27,13 +25,6 @@ const sshKey = new tls.PrivateKey("ssh-key", {
 });
 
 
-
-// Create a resource group
-//const resourceGroup = new resources.ResourceGroup("resource-group");
-// Lookup the existing resource group --> later ifstatement
-/*const resourceGroup = resources.getResourceGroupOutput({
-    resourceGroupName: existingRgName,
-});*/
 
 // Create a virtual network
 const virtualNetwork = new network.VirtualNetwork("network", {
@@ -49,7 +40,7 @@ const virtualNetwork = new network.VirtualNetwork("network", {
     ],
 });
 
-// Create a security group allowing inbound access over ports 80 (for HTTP) and 22 (for SSH)
+// Create a security group allowing inbound access over port 22 (for SSH)
 const securityGroup = new network.NetworkSecurityGroup("security-group", {
     resourceGroupName: existingRgName,
     securityRules: [
@@ -63,30 +54,14 @@ const securityGroup = new network.NetworkSecurityGroup("security-group", {
             sourceAddressPrefix: "*",
             destinationPortRange: "22",
             destinationAddressPrefix: "*",
-        },
-        {
-            name: "HTTP",
-            priority: 200,
-            direction: network.AccessRuleDirection.Inbound,
-            access: "Allow",
-            protocol: "Tcp",
-            sourcePortRange: "*",
-            sourceAddressPrefix: "*",
-            destinationPortRange: servicePort,
-            destinationAddressPrefix: "*",
-        },
+        }
     ],
 });
 
-// Helper to create one VM + nic + pip
-interface VMInfo { name: string; ip: pulumi.Output<string | undefined>; }
-const vms: VMInfo[] = [];
 
 // first vm is a confidential Virtual machine 
-for (let i = 0; i < count; i++) {
-    const isConfidential = i === 0;
-    const name = isConfidential ? `confvm-${i}` : `vm-${i}`;
-
+for (const name of vmRoles) {
+    const isConfidential = name.endsWith("CVM");
 
     // Public IP + DNS label
     const pip = new network.PublicIPAddress(`${name}-pip`, {
@@ -94,13 +69,8 @@ for (let i = 0; i < count; i++) {
         publicIPAllocationMethod: isConfidential
             ? network.IPAllocationMethod.Static
             : network.IPAllocationMethod.Dynamic,
-        dnsSettings: {
-            domainNameLabel: new random.RandomString(`${name}-dns`, {
-                length: 8, upper: false, special: false,
-            }).result.apply(r => `${name}-${r}`),
-        },
         zones: isConfidential ? ["2"] : undefined, // Ensure zone matches the VM
-        sku: isConfidential ? { name: "Standard" } : undefined,  // 👈 ADD THIS LINE
+        sku: isConfidential ? { name: "Standard" } : undefined,
     });
 
     // NIC
@@ -189,55 +159,17 @@ sudo cat /home/${adminUsername}/file_policy > /sys/kernel/security/ima/policy
         },
     });
 
-    const ip = pip.ipAddress;
-    vms.push({ name, ip });
 }
 
 
-// 2) Wait for all VM IPs, then build + write hosts.ini:
-const names = vms.map(v => v.name);
-const ipOuts = vms.map(v => v.ip);
 
-pulumi.all(ipOuts).apply(ips => {
-    // Now `ips` is a string[] with real IPs, in same order as `names`.
-
-    // Build the [keylime] group
-    const keylimeLines: string[] = [];
-    for (let idx = 0; idx < names.length; idx++) {
-        keylimeLines.push(`${names[idx]} ansible_host=${ips[idx]}`);
-    }
-
-    // Stitch together the final INI
-    const ini = `
-[all:vars]
-ansible_user=${adminUsername}
-ansible_ssh_private_key_file=./ssh-key
-
-[keylime]
-${keylimeLines.join("\n")}
-
-[all]
-${names.join(" ")}
-  `.trim();
-
-    // Only write on real `pulumi up`
-    if (!pulumi.runtime.isDryRun()) {
-        const iniPath = path.join(process.cwd(), "hosts.ini");
-        fs.writeFileSync(iniPath, ini);
-        console.log(`✔ hosts.ini written to ${iniPath}`);
-    } else {
-        console.log("⏭ Preview: hosts.ini write skipped");
-    }
-
-    return ini;
-});
 sshKey.privateKeyOpenssh.apply(privateKey => {
     if (!pulumi.runtime.isDryRun()) {
         const keyPath = path.join(process.cwd(), "ssh-key");
         fs.writeFileSync(keyPath, privateKey, { mode: 0o600 });
-        console.log(`✔ Private SSH key written to ${keyPath}`);
+        console.log(`Private SSH key written to ${keyPath}`);
     } else {
-        console.log("⏭ Preview: SSH key write skipped");
+        console.log("Preview: SSH key write skipped");
     }
 });
 
