@@ -64,10 +64,10 @@ Ensure the following are installed on your local machine:
    Execute this on the tenant.
 
    ```bash
-   ansible-playbook -i hosts.ini playbook.yml
+   ansible-playbook -i hosts_vagrant.ini playbook.yml
    ```
 
-   *Note:* If your executing Ansible on your host machine, change the location of the ssh-keys in the `hosts.ini`file accordingly
+   *Note:* If your executing Ansible on your host machine, change the location of the ssh-keys in the `hosts_vagrant.ini`file accordingly
 
 ### Testing Remote Attestation
 
@@ -188,15 +188,15 @@ You also need access to the `Standard_DC2as_v5` VM size , as this is a confident
 
    After the infrastructure is set up, we copy the newly created ssh-key into the tenant using `scp`, as the tenant will be used again as our ansible control node. Install Ansible on the tenant , and clone this repo. 
 
-   Modify the `hosts.ini` file so that the `ansible_host` of each Keylime component match the private IP of the corresponding VM. Additionally, change the `ansible_user` to `pulumiuser` and change the path to the ssh-key, to where you stored it. Lastly, make sure that in `/group_vars/all.yml` the software tpm is disabled, as we are using Azure's vTPM. (the tpm emulator is not supported on ubuntu anyways)
+   Modify the `hosts_pulumi.ini` file so that the `ansible_host` of each Keylime component match the private IP of the corresponding VM . Additionally, change the path to the ssh-key, to where you stored it. Lastly, make sure that in `/group_vars/all.yml` the software tpm is disabled, as we are using Azure's vTPM. (the tpm emulator is not supported on ubuntu anyways)
 
-   Automatically provision and configure the VM's:
+   Automatically provision and configure the VM's: (I used the tenant again to run this command, after cloning )
    ```bash
-   ansible-playbook -i hosts.ini playbook.yml
+   ansible-playbook -i hosts_pulumi.ini playbook.yml
    ```
    Run an extra playbook, to configure keylime specially for this Azure setup:
     ```bash
-   ansible-playbook -i hosts.ini playbook_azure.yml
+   ansible-playbook -i hosts_pulumi.ini playbook_azure.yml
    ```
 
     Now you can use the same workflow described in [Testing Remote Attestation](#testing-remote-attestation) of the local setup. To start using Keylime. For making your own workflow i recommend looking through [Keylime's Documentation](https://keylime.readthedocs.io/en/latest/)
@@ -214,7 +214,7 @@ For local testing, you can change the `Vragrantfile` as you like. This allows yo
 
 For testing on Azure, you can change the variables in `Pulumi.dev.yaml` and/or change the index.ts file to your liking.
 
-**Important to note**: change the `hosts.ini` file accordingly, and if you are planning to run multiple Keylime components on 1 VM use the following playbook instead `playbook_serial` (makes sure package installer is not blocked).
+**Important to note**: change the `hosts_<X>.ini` file accordingly, and if you are planning to run multiple Keylime components on 1 VM use the following playbook instead `playbook_serial` (makes sure package installer is not blocked).
 
 ### Ansible Keylime Configuration
 
