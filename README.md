@@ -16,7 +16,7 @@ Ensure the following are installed on your local machine:
 
 * [Vagrant](https://www.vagrantup.com/downloads)
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads) 
-* [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (for running playbooks inside the VM)
+* [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) 
 
 ### Setup Instructions
 
@@ -144,7 +144,7 @@ Ensure the following tools are installed and configured:
 * [Node.js and npm](https://nodejs.org/en/download/)
 * [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
-You also need access to the `Standard_DC2as_v5` VM size , as this is a confidential machine with Azure's VTPM. Access can be requested using the Azure Portal. You can also use the trustedlaunch VM's containing a similar (but way less secure ) vTPM to test the infrastructure, this requires editing of the `/IaC/index.ts`file. This file also uses the resource group `Jelle-Thesis-Resources`, which can be changed in `Pulumi.dev
+You also need access to the `Standard_DC2as_v5` VM size , as this is a confidential machine with Azure's VTPM. Access can be requested using the Azure Portal. You can also use the trustedlaunch VM's containing a similar (but way less secure ) vTPM to test the infrastructure, this requires editing of the `/IaC/index.ts`file. This file also uses the resource group `Jelle-Thesis-Resources`, which can be changed in `Pulumi.dev.yaml` to your own resource group. 
 
 ### Setup Instructions
 
@@ -199,7 +199,23 @@ You also need access to the `Standard_DC2as_v5` VM size , as this is a confident
 
 ---
 
-## Repository Structure
+## Customization options
 
-```pla
-```
+This project is build so that you can customize these environments and the Keylime setup easily, to perform multiple tests on the framework.
+
+### Infrastructure customization
+
+For local testing, you can change the `Vragrantfile` as you like. This allows you to increase or decrease the amount of VM's, use other network configurations ,... . 
+
+For testing on Azure, you can change the variables in `Pulumi.dev.yaml` and/or change the index.ts file to your liking.
+
+**Important to note**: change the `hosts.ini` file accordingly, and if you are planning to run multiple Keylime components on 1 VM use the following playbook instead `playbook_serial` (makes sure package installer is not blocked).
+
+### Ansible Keylime Configuration
+
+You can change the variables used in the playbook in `group_vars/all.yml` and in `/host_vars` for each component individually. This allows you to set up custom Keylime workflows.
+
+### Certificate customization
+
+For experimenting, we use some sample certificates out of `/CA` to set up mTLS. You can use your own certificates instead, but you just have to specify the paths in the ansible configuration files specified above. To know how to destribute the certificates, checking how its done now in the Ansible and reading my thesis Section 4.3.4 .
+
