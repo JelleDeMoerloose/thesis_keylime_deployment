@@ -57,10 +57,9 @@ Ensure the following are installed on your local machine:
 
 
 5. **Run Ansible Playbook:**
-
-   To automatically provision the VM setup with Keylime and configure it correctly, you can use the Ansible `playbook.yml` file. Make sure that you turn `swtpm_enabled: true` to install a TPM emulator and IMA emulator, as these local VM's do not have a dedicated TPM. 
-
    Because I was using Windows, I could not use Ansible. So I ssh-ed into the tenant using `vagrant ssh keylime_tenant` and cloned this github repository. Ansible is already installed on this machine, and the hostfile will work without any changes.
+
+   To automatically provision the VM setup with Keylime and configure it correctly, you can use the Ansible `playbook.yml` file. Make sure that you turn `swtpm_enabled: true` (inside `group_vars/all`) to install a TPM emulator and IMA emulator, as these local VM's do not have a dedicated TPM. 
 
    Execute this on the tenant.
 
@@ -84,7 +83,7 @@ Once the environment is set up, you can test remote attestation with Keylime usi
     /root/keylime/scripts/create_runtime_policy.sh  -o test_runtime_policy.json -a sha256sum -e excludes_list.txt
     ```
 
-    * `-e excludes_list.txt` provides a list of files and directories to ignore during the scan. For these files you don't care about integrity. It is highly recommended to add such an excludeslist, otherwise the Keylime verifier will pick up on every insignificant change and will trigger revocation.
+    * `-e excludes_list.txt` provides a list of files and directories to ignore during the scan. For these files you don't care about integrity. It is highly recommended to add such an excludeslist, otherwise the Keylime verifier will pick up on every insignificant change and will trigger revocation. This repo contains an example file.
 
     The generated `test_runtime_policy.json` will contain the baseline hashes of all included files. Move this file to the tenant, using the `/vagrant` shared folder. The tenant will later use this to deploy this policy on the agent. 
 
@@ -145,6 +144,8 @@ Ensure the following tools are installed and configured:
 * [Node.js and npm](https://nodejs.org/en/download/)
 * [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
+You also need access to the `Standard_DC2as_v5` VM size , as this is a confidential machine with Azure's VTPM. Access can be requested using the Azure Portal. You can also use the trustedlaunch VM's containing a similar (but way less secure ) vTPM to test the infrastructure, this requires editing of the `/IaC/index.ts`file. This file also uses the resource group `Jelle-Thesis-Resources`, which can be changed in `Pulumi.dev
+
 ### Setup Instructions
 
 1. **Authenticate with Azure:**
@@ -157,10 +158,10 @@ Ensure the following tools are installed and configured:
 
 2. **Install Pulumi Dependencies:**
 
-   Navigate to the Azure IaC directory and install the necessary npm packages:
+   After cloning this repo, navigate to the Azure IaC directory and install the necessary npm packages:
 
    ```bash
-   cd azure_iac
+   cd IaC
    npm install
    ```
 
@@ -169,20 +170,32 @@ Ensure the following tools are installed and configured:
    Initialize and deploy the Azure infrastructure:
 
    ```bash
+   pulumi login
+   pulumi stack select dev
    pulumi up
    ```
 
-   This command will provision the defined Azure resources.
+   This last command will provision the defined Azure resources.
+
+   You can use `pulumi destroy` to safely destroy all resources created on Azure, making sure you are not incurring any costs. 
 
 4. **Run Ansible Playbook on Azure VM:**
 
-   After the infrastructure is set up, use Ansible to configure Keylime on the Azure VM:
+   After the infrastructure is set up, we copy the newly created ssh-key into the tenant using `scp`, as the tenant will be used again as our ansible control node. Install Ansible on the tenant , and clone this repo. 
 
+   Modify the `hosts.ini` file so that the `ansible_host` of each Keylime component match the private IP of the corresponding VM. Additionally, change the `ansible_user` to `pulumiuser` and change the path to the ssh-key, to where you stored it. Lastly, make sure that in `/group_vars/all.yml` the software tpm is disabled, as we are using Azure's vTPM. (the tpm emulator is not supported on ubuntu anyways)
+
+   Automatically provision and configure the VM's:
    ```bash
+   ansible-playbook -i hosts.ini playbook.yml
+   ```
+   Run an extra playbook, to configure keylime specially for this Azure setup:
+    ```bash
    ansible-playbook -i hosts.ini playbook_azure.yml
    ```
 
-   Ensure that the `hosts.ini` file contains the correct IP address or hostname of the Azure VM.
+    Now you can use the same workflow described in [Testing Remote Attestation](#testing-remote-attestation) of the local setup. To start using Keylime. For making your own workflow i recommend looking through [Keylime's Documentation](https://keylime.readthedocs.io/en/latest/)
+
 
 ---
 
