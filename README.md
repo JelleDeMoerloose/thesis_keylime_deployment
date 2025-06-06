@@ -190,6 +190,12 @@ You also need access to the `Standard_DC2as_v5` VM size , as this is a confident
 
    Modify the `hosts_pulumi.ini` file so that the `ansible_host` of each Keylime component match the private IP of the corresponding VM . Additionally, change the path to the ssh-key, to where you stored it. Lastly, make sure that in `/group_vars/all.yml` the software tpm is disabled, as we are using Azure's vTPM. (the tpm emulator is not supported on ubuntu anyways)
 
+   If you do not want to manually accept each ssh fingerprint of each VM you can run : (RECOMMENDED)
+    ````bash
+    ssh-keyscan -H 10.0.1.5 10.0.1.6 10.0.1.7 10.0.1.8 >> ~/.ssh/known_hosts
+    ````
+    Note: use the private IPs of the created VMs (these were just examples)
+
    Automatically provision and configure the VM's: (I used the tenant again to run this command, after cloning )
    ```bash
    ansible-playbook -i hosts_pulumi.ini playbook.yml
