@@ -167,13 +167,18 @@ You also need access to the `Standard_DC2as_v5` VM size , as this is a confident
 
 3. **Deploy Infrastructure with Pulumi:**
 
-   Initialize and deploy the Azure infrastructure:
+   Initialize and Pulumi project:
 
    ```bash
-   pulumi login
-   pulumi stack select dev
-   pulumi up
+   pulumi login --local
+   pulumi stack init dev  # creates the stack and generates encryption salt
    ```
+
+   Now you copy the values from `Pulumi.template.yaml` to `Pulumi.dev.yaml` , while keeping your encryption salt. 
+   Now you can create the defined Azure infrastructure in `index.ts`:
+   ````bash
+   pulumi up
+   ````
 
    This last command will provision the defined Azure resources.
 
@@ -213,7 +218,7 @@ For testing on Azure, you can change the variables in `Pulumi.dev.yaml` and/or c
 
 ### Ansible Keylime Configuration
 
-You can change the variables used in the playbook in `group_vars/all.yml` and in `/host_vars` for each component individually. This allows you to set up custom Keylime workflows.
+You can change the configuration variables used in the playbook in `group_vars/all.yml` and in `/host_vars` for each component individually. This allows you to set up custom Keylime workflows. To check out additional configuration options on the VMs provisioned with Keylime, in `/etc/keylime/`  you will find configuration files that document the options for each component. You can set them using ENV variables (see [Keylime's Documentation](https://keylime.readthedocs.io/en/latest/)).
 
 ### Certificate customization
 

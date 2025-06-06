@@ -1,0 +1,12 @@
+config:
+  azure-native:location: EASTUS
+  keylimeVMsetup:adminUsername: pulumiuser
+  keylimeVMsetup:osImage: Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest
+  keylimeVMsetup:vmSize: Standard_B2s
+  keylimeVMsetup:RgName: Jelle-Thesis-Resources
+  keylimeVMsetup:vmRoles:
+    - agentCVM
+    - tenantVM
+    - verifierVM
+    - registrarVM
+
