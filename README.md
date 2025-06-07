@@ -6,6 +6,10 @@ This repository contains tools and scripts developed to facilitate experimentati
 
 The project focuses on automating the deployment and setup of Keylime in various environments, including local virtual machines and Azure cloud infrastructure. It leverages tools like Vagrant, Ansible, and Pulumi to streamline the provisioning and configuration processes. To understand the internals of these tools, it is recommended to read my thesis and look inside the files. This documentation mainly shows how to use the tools . 
 
+## DEMO video
+
+This [video](https://drive.google.com/file/d/18XMYbF_jHKK7agNl4OKZV8ejDv3zO-ub/view?usp=sharing) how to deploy independent remote attestation with Azure's vTPM.  
+
 ---
 
 ## Local Testing with Vagrant
